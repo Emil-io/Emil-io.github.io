@@ -2,11 +2,39 @@
 <html>
 <head>
     <title>Project 0</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg: #fafafa;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --card: #ffffff;
+            --border: #e5e7eb;
+            --accent: #2563eb;
+        }
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            margin: 0;
+            line-height: 1.65;
+            color: var(--text);
+            background: var(--bg);
             text-align: center;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 32px 20px; }
+        header { margin-bottom: 20px; }
+        header h1 { margin: 0; font-size: 32px; }
+        header p { margin: 6px 0 0; color: var(--muted); }
+        nav a { color: var(--accent); text-decoration: none; }
+        nav a:hover { text-decoration: underline; }
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
         }
         img {
             max-width: 90vw;
@@ -14,20 +42,119 @@
             width: auto;
             height: auto;
         }
+        .headshots {
+            display: flex;
+            gap: 0;
+            align-items: flex-start;
+            justify-content: center;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            margin-top: 24px;
+            line-height: 0;
+        }
+        .headshot {
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        .headshots img {
+            max-width: none;
+            max-height: none;
+            height: 260px;
+            width: auto;
+            display: block;
+            margin: 0;
+        }
+        .headshot figcaption { display: none; }
+        .placeholder {
+            height: 240px;
+            border: 1px dashed var(--border);
+            background: #f8fafc;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--muted);
+            margin-top: 12px;
+        }
     </style>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta charset="utf-8" />
-    <meta name="description" content="Project 0 - Dolly GIF" />
-    <link rel="icon" href="../dolly.gif" />
-    <link rel="preload" as="image" href="../dolly.gif" />
-    <link rel="prefetch" href="../dolly.gif" />
-    <link rel="prerender" href="../dolly.gif" />
+    <meta name="description" content="Project 0 - Headshots and Dolly GIF" />
+    <link rel="icon" href="./dolly.gif" />
+    <link rel="preload" as="image" href="./dolly.gif" />
+    <link rel="prefetch" href="./dolly.gif" />
+    <link rel="prerender" href="./dolly.gif" />
 </head>
 <body>
-    <h1>Project 0</h1>
-    <p>Below is the dolly GIF:</p>
-    <img src="../dolly.gif" alt="Dolly GIF" />
-    <p><a href="../index.html">← Back to Home</a></p>
+    <div class="container">
+        <header>
+            <h1>Project 0</h1>
+            <p>CS180 — UC Berkeley</p>
+            <nav><a href="../index.html">← Back to Home</a></nav>
+        </header>
+
+        <section class="card">
+            <h2>Task 1: Headshots at Different Camera Settings</h2>
+            <div class="headshots" aria-label="Headshots ordered from highest to lowest focal length">
+        <figure class="headshot">
+            <img src="./headshots/8 Large.jpeg" alt="Headshot - highest focal length" />
+        </figure>
+        <figure class="headshot">
+            <img src="./headshots/6 Large.jpeg" alt="Headshot" />
+        </figure>
+        <figure class="headshot">
+            <img src="./headshots/4 Large.jpeg" alt="Headshot" />
+        </figure>
+        <figure class="headshot">
+            <img src="./headshots/2 Large.jpeg" alt="Headshot" />
+        </figure>
+        <figure class="headshot">
+            <img src="./headshots/1 Large.jpeg" alt="Headshot" />
+        </figure>
+        <figure class="headshot">
+            <img src="./headshots/0 Large.jpeg" alt="Headshot - lowest focal length" />
+        </figure>
+            </div>
+            <p>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere, nibh in gravida semper,
+                lacus arcu pretium sem, eu efficitur lorem nisi et ex. Curabitur id tellus non nunc malesuada aliquet.
+                Suspendisse potenti. Mauris fringilla, sapien nec tincidunt tincidunt, risus odio sodales leo, id
+                gravida lorem mauris vitae ex. Aliquam at ante non dui viverra volutpat. Pellentesque habitant morbi
+                tristique senectus et netus et malesuada fames ac turpis egestas. Fusce at arcu at erat facilisis
+                porttitor. Cras mattis, velit quis ultrices vulputate, orci nisi commodo urna, in placerat arcu tortor
+                id velit.
+            </p>
+        </section>
+
+        <section class="card">
+            <h2>Task 2: Placeholder</h2>
+            <div class="placeholder" aria-hidden="true">Image/figure coming soon</div>
+            <p>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed bibendum, quam nec fringilla porttitor,
+                urna nibh mattis nunc, vitae interdum tortor sem non justo. In et accumsan lorem, sit amet tempor
+                turpis. Vivamus sit amet consequat justo. Duis sed nisi quis mauris facilisis suscipit. Integer sed
+                ligula nec nibh maximus fermentum. Pellentesque id nisl vitae purus hendrerit finibus. Donec luctus
+                pulvinar neque, id volutpat nisl porttitor id. Vestibulum ante ipsum primis in faucibus orci luctus et
+                ultrices posuere cubilia curae; Phasellus aliquam, nibh non ultrices laoreet, odio eros pellentesque
+                justo, nec tristique sem massa sit amet arcu.
+            </p>
+        </section>
+
+        <section class="card">
+            <h2>Task 3: Dolly Zoom GIF</h2>
+            <img src="./dolly.gif" alt="Dolly GIF" />
+            <p>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus porttitor, nisl non ultrices sodales,
+                mauris quam venenatis lectus, at gravida massa libero vitae leo. Nam finibus purus nec nulla lacinia,
+                at bibendum urna ullamcorper. Proin hendrerit sollicitudin tortor, nec cursus urna fermentum quis. Sed
+                vitae est id neque interdum elementum. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices
+                posuere cubilia curae; Integer tincidunt, nibh vitae faucibus pharetra, tellus urna convallis turpis,
+                at dapibus sem dolor at arcu. Praesent pulvinar, eros non varius dictum, ipsum libero aliquet arcu, nec
+                feugiat mauris elit at sem.
+            </p>
+        </section>
+    </div>
 </body>
 </html>
 

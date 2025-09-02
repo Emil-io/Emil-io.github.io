@@ -2,21 +2,79 @@
 <html>
 <head>
     <title>My Portfolio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg: #fafafa;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --card: #ffffff;
+            --border: #e5e7eb;
+            --accent: #2563eb;
+        }
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            margin: 0;
+            line-height: 1.65;
+            color: var(--text);
+            background: var(--bg);
+            text-align: center;
         }
-        a {
+        .container { max-width: 980px; margin: 0 auto; padding: 40px 20px; }
+        header h1 { margin: 6px 0 0; font-size: 34px; }
+        header p { margin: 0; color: var(--muted); }
+        .projects { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; justify-items: stretch; margin-top: 24px; }
+        .project-card {
             display: block;
-            margin: 4px 0;
+            text-align: left;
+            padding: 14px;
+            border-radius: 12px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            color: var(--text);
+            text-decoration: none;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
         }
+        .project-card:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+        .project-card h3 { margin: 12px 0 4px; font-size: 18px; }
+        .project-card p { margin: 0; color: var(--muted); }
+        .preview { border-radius: 8px; overflow: hidden; border: 1px solid var(--border); background: #f8fafc; padding: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 84px; }
+        .mini-strip { display: flex; gap: 2px; }
+        .mini-strip img { height: 48px; width: auto; display: block; }
+        .mini-gif { height: 48px; width: auto; border-radius: 4px; }
+        .placeholder { height: 84px; display: flex; align-items: center; justify-content: center; color: var(--muted); border: 1px dashed var(--border); border-radius: 8px; background: #f8fafc; }
     </style>
 </head>
 <body>
-    <h2>UC Berkeley: Intro to Computer Vision and Computational Photography</h2>
-    <h1>Welcome to My CS180 Portfolio!</h1>
-    <a href="./0/index.html">Project 0</a>
-    <a href="./1/index.html">Project 1</a>
+    <div class="container">
+        <header>
+            <p>UC Berkeley: Intro to Computer Vision and Computational Photography</p>
+            <h1>CS180 Portfolio</h1>
+        </header>
+        <div class="projects">
+            <a class="project-card" href="./0/index.html">
+                <div class="preview">
+                    <div class="mini-strip" aria-hidden="true">
+                        <img src="./0/headshots/8 Large.jpeg" alt="" />
+                        <img src="./0/headshots/6 Large.jpeg" alt="" />
+                        <img src="./0/headshots/4 Large.jpeg" alt="" />
+                        <img src="./0/headshots/2 Large.jpeg" alt="" />
+                        <img src="./0/headshots/0 Large.jpeg" alt="" />
+                    </div>
+                    <img class="mini-gif" src="./0/dolly.gif" alt="Dolly zoom preview" />
+                </div>
+                <h3>Project 0</h3>
+                <p>Focal length headshots + Dolly Zoom</p>
+            </a>
+            <a class="project-card" href="./1/index.html">
+                <div class="placeholder">Preview coming soon</div>
+                <h3>Project 1</h3>
+                <p>Under Construction</p>
+            </a>
+        </div>
+    </div>
 </body>
 </html>

@@ -84,12 +84,19 @@
         .headshots img {
             max-width: none;
             max-height: none;
-            height: 260px;
+            height: 256px;
             width: auto;
             display: block;
             margin: 0;
+            border-radius: 0;
         }
         .headshot figcaption { display: none; }
+        .card > img { border-radius: 18px; }
+        /* Round only the outer corners of the entire headshot strip */
+        .headshots .headshot:first-child img { border-top-left-radius: 18px; border-bottom-left-radius: 18px; }
+        .headshots .headshot:last-child img { border-top-right-radius: 18px; border-bottom-right-radius: 18px; }
+        .two-up { display: flex; gap: 12px; justify-content: center; align-items: flex-start; margin-top: 12px; }
+        .two-up img { flex: 1 1 0; min-width: 0; width: 100%; height: auto; border-radius: 18px; }
         .placeholder {
             height: 240px;
             border: 1px dashed var(--border);
@@ -119,7 +126,7 @@
         </header>
 
         <section class="card glass">
-            <h2>Task 1: Headshots at Different Camera Settings</h2>
+            <h2>Part 1: Selfie: The Wrong Way vs. The Right Way</h2>
             <div class="headshots" aria-label="Headshots ordered from highest to lowest focal length">
         <figure class="headshot">
             <img src="./headshots/8 Large.jpeg" alt="Headshot - highest focal length" />
@@ -152,8 +159,11 @@
         </section>
 
         <section class="card glass">
-            <h2>Task 2: Placeholder</h2>
-            <div class="placeholder glass" aria-hidden="true">Image/figure coming soon</div>
+            <h2>Part 2: Architectural Perspective Compression</h2>
+            <div class="two-up">
+                <img src="./street/2 Large.jpeg" alt="Street image 2" />
+                <img src="./street/1 Large.jpeg" alt="Street image 1" />
+            </div>
             <p>
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed bibendum, quam nec fringilla porttitor,
                 urna nibh mattis nunc, vitae interdum tortor sem non justo. In et accumsan lorem, sit amet tempor
@@ -166,7 +176,7 @@
         </section>
 
         <section class="card glass">
-            <h2>Task 3: Dolly Zoom GIF</h2>
+            <h2>Part 3: The Dolly Zoom</h2>
             <img src="./dolly.gif" alt="Dolly GIF" />
             <p>
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus porttitor, nisl non ultrices sodales,

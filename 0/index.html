@@ -7,12 +7,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #fafafa;
-            --text: #1f2937;
-            --muted: #6b7280;
-            --card: #ffffff;
-            --border: #e5e7eb;
+            --bg: #f5f7fb;
+            --text: #0f172a;
+            --muted: #475569;
+            --border: rgba(255,255,255,0.35);
             --accent: #2563eb;
+            --glass-bg: rgba(255,255,255,0.45);
+            --glass-shadow: 0 10px 30px rgba(2,6,23,0.08);
         }
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
@@ -23,19 +24,42 @@
             text-align: center;
         }
         .container { max-width: 1200px; margin: 0 auto; padding: 32px 20px; }
-        header { margin-bottom: 20px; }
+        header { margin-bottom: 20px; padding: 16px; border-radius: 16px; }
         header h1 { margin: 0; font-size: 32px; }
         header p { margin: 6px 0 0; color: var(--muted); }
         nav a { color: var(--accent); text-decoration: none; }
         nav a:hover { text-decoration: underline; }
-        .card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 20px;
-            margin: 20px 0;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+        .glass {
+            position: relative;
+            border-radius: 18px;
+            border: 1px solid transparent;
+            background-image:
+                linear-gradient(135deg, rgba(255,255,255,0.55), rgba(255,255,255,0.25)),
+                linear-gradient(135deg, rgba(255,255,255,0.85), rgba(17,24,39,0.08));
+            background-origin: padding-box, border-box;
+            background-clip: padding-box, border-box;
+            box-shadow: var(--glass-shadow);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            backdrop-filter: blur(16px) saturate(180%);
         }
+        .glass::before {
+            content: "";
+            position: absolute;
+            inset: 1px;
+            border-radius: inherit;
+            pointer-events: none;
+            background: radial-gradient(120% 80% at 0% 0%, rgba(255,255,255,0.65), rgba(255,255,255,0) 60%);
+            mix-blend-mode: screen;
+        }
+        .glass::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            pointer-events: none;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -1px 0 rgba(255,255,255,0.35), inset 0 0 40px rgba(255,255,255,0.12);
+        }
+        .card { padding: 20px; margin: 20px 0; }
         img {
             max-width: 90vw;
             max-height: 80vh;
@@ -88,13 +112,13 @@
 </head>
 <body>
     <div class="container">
-        <header>
+        <header class="glass">
             <h1>Project 0</h1>
             <p>CS180 — UC Berkeley</p>
             <nav><a href="../index.html">← Back to Home</a></nav>
         </header>
 
-        <section class="card">
+        <section class="card glass">
             <h2>Task 1: Headshots at Different Camera Settings</h2>
             <div class="headshots" aria-label="Headshots ordered from highest to lowest focal length">
         <figure class="headshot">
@@ -127,9 +151,9 @@
             </p>
         </section>
 
-        <section class="card">
+        <section class="card glass">
             <h2>Task 2: Placeholder</h2>
-            <div class="placeholder" aria-hidden="true">Image/figure coming soon</div>
+            <div class="placeholder glass" aria-hidden="true">Image/figure coming soon</div>
             <p>
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed bibendum, quam nec fringilla porttitor,
                 urna nibh mattis nunc, vitae interdum tortor sem non justo. In et accumsan lorem, sit amet tempor
@@ -141,7 +165,7 @@
             </p>
         </section>
 
-        <section class="card">
+        <section class="card glass">
             <h2>Task 3: Dolly Zoom GIF</h2>
             <img src="./dolly.gif" alt="Dolly GIF" />
             <p>

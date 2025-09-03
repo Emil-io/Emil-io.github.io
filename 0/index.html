@@ -24,7 +24,7 @@
             text-align: center;
         }
         .container { max-width: 1200px; margin: 0 auto; padding: 32px 20px; }
-        header { margin-bottom: 20px; padding: 16px; border-radius: 16px; }
+        header { margin-bottom: 20px; padding: 16px; border-radius: 16px; display: flex; align-items: center; gap: 12px; }
         header h1 { margin: 0; font-size: 32px; }
         header p { margin: 6px 0 0; color: var(--muted); }
         nav a { color: var(--accent); text-decoration: none; }
@@ -108,6 +108,26 @@
             color: var(--muted);
             margin-top: 12px;
         }
+        /* Print-friendly overrides */
+        @media print {
+            @page { size: auto; margin: 12mm; }
+            html, body { background: #ffffff !important; color: #000000 !important; }
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .container { max-width: none; padding: 0; }
+            header.glass, .card.glass, .placeholder.glass {
+                background: #ffffff !important;
+                background-image: none !important;
+                border: 1px solid #cccccc !important;
+                box-shadow: none !important;
+                -webkit-backdrop-filter: none !important;
+                backdrop-filter: none !important;
+            }
+            nav a { color: #000000 !important; text-decoration: underline; }
+            .headshots { overflow: visible; }
+            .two-up { gap: 10mm; }
+            header.glass img { height: 64px !important; width: auto !important; }
+            .card img, .two-up img, .headshots img { max-width: 100% !important; height: auto !important; }
+        }
     </style>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta charset="utf-8" />
@@ -120,9 +140,12 @@
 <body>
     <div class="container">
         <header class="glass">
-            <h1>Project 0</h1>
-            <p>CS180 — UC Berkeley</p>
-            <nav><a href="../index.html">← Back to Home</a></nav>
+            <img src="../logo.png" alt="UC Berkeley logo" style="height:64px;width:auto;" />
+            <div style="text-align:left;">
+                <h1>Project 0</h1>
+                <p>CS180 — UC Berkeley</p>
+            </div>
+            <nav style="margin-left:auto;"><a href="../index.html">← Back to Home</a></nav>
         </header>
 
         <section class="card glass">
@@ -148,13 +171,7 @@
         </figure>
             </div>
             <p>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere, nibh in gravida semper,
-                lacus arcu pretium sem, eu efficitur lorem nisi et ex. Curabitur id tellus non nunc malesuada aliquet.
-                Suspendisse potenti. Mauris fringilla, sapien nec tincidunt tincidunt, risus odio sodales leo, id
-                gravida lorem mauris vitae ex. Aliquam at ante non dui viverra volutpat. Pellentesque habitant morbi
-                tristique senectus et netus et malesuada fames ac turpis egestas. Fusce at arcu at erat facilisis
-                porttitor. Cras mattis, velit quis ultrices vulputate, orci nisi commodo urna, in placerat arcu tortor
-                id velit.
+                When holding the camera close, the pencils or rays from the nose and other parts of the face arrive at the point of the camera at steep angles. This makes them appear much larger than the ears or sides of the head. It exaggerates perspective and causes the  "big nose". When stepping back and zooming in, the rays from all parts of the face arrive nearly parallel. Therefore, the proportions look more natural.
             </p>
         </section>
 
@@ -165,28 +182,14 @@
                 <img src="./street/1 Large.jpeg" alt="Street image 1" />
             </div>
             <p>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed bibendum, quam nec fringilla porttitor,
-                urna nibh mattis nunc, vitae interdum tortor sem non justo. In et accumsan lorem, sit amet tempor
-                turpis. Vivamus sit amet consequat justo. Duis sed nisi quis mauris facilisis suscipit. Integer sed
-                ligula nec nibh maximus fermentum. Pellentesque id nisl vitae purus hendrerit finibus. Donec luctus
-                pulvinar neque, id volutpat nisl porttitor id. Vestibulum ante ipsum primis in faucibus orci luctus et
-                ultrices posuere cubilia curae; Phasellus aliquam, nibh non ultrices laoreet, odio eros pellentesque
-                justo, nec tristique sem massa sit amet arcu.
+                From further away with zoom, the pencils of rays from from near and far buildings reach the camera almost in parallel, which visually compresses the whole scence. This makes distances look comparitively short. Up close, the rays spread at steeper angles, so nearby objects appear a lot larger while more distant objects tend to shrink. This makes the stree look stretched.
             </p>
         </section>
 
         <section class="card glass">
             <h2>Part 3: The Dolly Zoom</h2>
             <img src="./dolly.gif" alt="Dolly GIF" />
-            <p>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus porttitor, nisl non ultrices sodales,
-                mauris quam venenatis lectus, at gravida massa libero vitae leo. Nam finibus purus nec nulla lacinia,
-                at bibendum urna ullamcorper. Proin hendrerit sollicitudin tortor, nec cursus urna fermentum quis. Sed
-                vitae est id neque interdum elementum. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices
-                posuere cubilia curae; Integer tincidunt, nibh vitae faucibus pharetra, tellus urna convallis turpis,
-                at dapibus sem dolor at arcu. Praesent pulvinar, eros non varius dictum, ipsum libero aliquet arcu, nec
-                feugiat mauris elit at sem.
-            </p>
+
         </section>
     </div>
 </body>

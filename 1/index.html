@@ -9,42 +9,487 @@
         :root {
             --bg: #f5f7fb;
             --text: #0f172a;
+            --muted: #475569;
             --border: rgba(255,255,255,0.35);
+            --accent: #2563eb;
             --glass-bg: rgba(255,255,255,0.45);
             --glass-shadow: 0 10px 30px rgba(2,6,23,0.08);
         }
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
             margin: 0;
+            line-height: 1.65;
+            color: var(--text);
+            background: var(--bg);
+            text-align: center;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 32px 20px; }
+        header { margin-bottom: 20px; padding: 16px; border-radius: 16px; display: flex; align-items: center; gap: 12px; }
+        header h1 { margin: 0; font-size: 32px; }
+        header p { margin: 6px 0 0; color: var(--text); }
+        nav a { color: var(--accent); text-decoration: none; }
+        nav a:hover { text-decoration: underline; }
+        .glass {
+            position: relative;
+            border-radius: 18px;
+            border: 1px solid transparent;
+            background-image:
+                linear-gradient(135deg, rgba(255,255,255,0.55), rgba(255,255,255,0.25)),
+                linear-gradient(135deg, rgba(255,255,255,0.85), rgba(17,24,39,0.08));
+            background-origin: padding-box, border-box;
+            background-clip: padding-box, border-box;
+            box-shadow: var(--glass-shadow);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            backdrop-filter: blur(16px) saturate(180%);
+        }
+        .glass::before {
+            content: "";
+            position: absolute;
+            inset: 1px;
+            border-radius: inherit;
+            pointer-events: none;
+            background: radial-gradient(120% 80% at 0% 0%, rgba(255,255,255,0.65), rgba(255,255,255,0) 60%);
+            mix-blend-mode: screen;
+        }
+        .glass::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            pointer-events: none;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -1px 0 rgba(255,255,255,0.35), inset 0 0 40px rgba(255,255,255,0.12);
+        }
+        .card { padding: 20px; margin: 20px 0; text-align: left; }
+        .muted { color: var(--muted); }
+        ul { margin: 0.5rem 0 0.5rem 1.25rem; }
+        li { margin: 0.25rem 0; }
+        .two-up { display: flex; gap: 12px; justify-content: center; align-items: flex-start; margin-top: 12px; }
+        .two-up img { flex: 1 1 0; min-width: 0; width: 100%; height: auto; border-radius: 18px; }
+        .two-up .compare { flex: 1 1 0; max-width: none; }
+        .two-up.hero { align-items: center; justify-content: center; position: relative; }
+        .two-up.hero::after { content: 'Click to expand'; position: absolute; right: 8px; bottom: 8px; background: rgba(15,23,42,0.7); color: #fff; padding: 4px 8px; border-radius: 999px; font-size: 12px; opacity: 0; transition: opacity 0.2s ease; pointer-events: none; }
+        .two-up.hero:hover::after { opacity: 1; }
+        .two-up.hero img { flex: 0 0 30%; max-width: 30%; max-height: 360px; height: auto; object-fit: contain; }
+        @media (max-width: 640px) {
+            .two-up.hero { flex-direction: column; }
+            .two-up.hero .arrow { display: none; }
+            .two-up.hero img { max-width: 100%; width: 100%; }
+        }
+        .two-up .arrow { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; font-size: 28px; padding: 0 8px; color: var(--text); }
+        .placeholder {
+            height: 240px;
+            border: 1px dashed var(--border);
+            background: #f8fafc;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            height: 100vh;
-            background: var(--bg);
-            color: var(--text);
+            color: var(--muted);
+            margin-top: 12px;
         }
-        .glass {
-            background: var(--glass-bg);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            box-shadow: var(--glass-shadow);
-            -webkit-backdrop-filter: blur(12px) saturate(140%);
-            backdrop-filter: blur(12px) saturate(140%);
-            padding: 20px 24px;
+        .formula { text-align: center; font-size: 18px; margin: 8px 0; }
+        /* Before/After Slider */
+        .compare { position: relative; width: 100%; max-width: 900px; margin: 12px auto 0; border-radius: 12px; overflow: hidden; box-shadow: var(--glass-shadow); }
+        .compare-base, .compare-overlay img { display: block; width: 100%; height: auto; user-select: none; }
+        .compare-overlay { position: absolute; inset: 0; overflow: hidden; will-change: clip-path; }
+        .compare-handle { position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; background: rgba(255,255,255,0.9); box-shadow: 0 0 0 1px rgba(15,23,42,0.35); cursor: ew-resize; }
+        .compare-handle::before { content: ""; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 18px; height: 18px; border-radius: 50%; background: rgba(255,255,255,0.95); box-shadow: 0 1px 2px rgba(15,23,42,0.2), 0 0 0 1px rgba(15,23,42,0.25); }
+        .compare-label { position: absolute; top: 8px; padding: 4px 8px; background: rgba(15,23,42,0.6); color: #fff; border-radius: 999px; font-size: 12px; }
+        .compare-label.left { left: 8px; }
+        .compare-label.right { right: 8px; }
+        .compare::after { content: 'Click to expand'; position: absolute; right: 8px; bottom: 8px; background: rgba(15,23,42,0.7); color: #fff; padding: 4px 8px; border-radius: 999px; font-size: 12px; opacity: 0; transition: opacity 0.2s ease; pointer-events: none; }
+        .compare:hover::after { opacity: 1; }
+        /* Results grid */
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px; }
+        .grid figure { margin: 0; position: relative; }
+        .grid img { width: 100%; height: auto; border-radius: 10px; display: block; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .grid figcaption { text-align: center; font-size: 12px; color: var(--muted); margin-top: 4px; }
+        .grid figure::after { content: 'Click to expand'; position: absolute; right: 8px; bottom: 8px; background: rgba(15,23,42,0.7); color: #fff; padding: 4px 8px; border-radius: 999px; font-size: 12px; opacity: 0; transition: opacity 0.2s ease; pointer-events: none; }
+        .grid figure:hover::after { opacity: 1; }
+        .grid figure:hover img { transform: scale(1.02); box-shadow: 0 8px 24px rgba(15,23,42,0.2); }
+        @media (max-width: 900px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 640px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+        /* Tables */
+        .table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        .table th, .table td { border: 1px solid var(--border); padding: 6px 8px; text-align: left; }
+        .table thead th { background: rgba(15,23,42,0.04); }
+        .table-slim { font-size: 13px; }
+        /* Lightbox */
+        .lightbox { position: fixed; inset: 0; background: rgba(15,23,42,0.8); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .lightbox.open { display: flex; }
+        .lightbox img { max-width: 92vw; max-height: 92vh; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.35); }
+        .lightbox .close { position: absolute; top: 16px; right: 16px; background: #ffffff; border: none; border-radius: 999px; width: 36px; height: 36px; cursor: pointer; font-size: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.25); }
+        .grid img, .compare img, .two-up.hero img { cursor: zoom-in; }
+        .compare:hover img { filter: brightness(0.98); }
+        /* Zoomed compare (cropped cutout without rescaling images differently) */
+        .compare.zoom { height: 360px; }
+        .compare.zoom .compare-base, .compare.zoom .compare-overlay img { height: 100%; width: auto; transform: scale(var(--zoom,3)); transform-origin: var(--origin, 50% 50%); }
+        /* Print-friendly overrides */
+        @media print {
+            @page { size: auto; margin: 12mm; }
+            html, body { background: #ffffff !important; color: #000000 !important; }
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .container { max-width: none; padding: 0; }
+            header.glass, .card.glass {
+                background: #ffffff !important;
+                background-image: none !important;
+                border: 1px solid #cccccc !important;
+                box-shadow: none !important;
+                -webkit-backdrop-filter: none !important;
+                backdrop-filter: none !important;
+            }
+            nav a { color: #000000 !important; text-decoration: underline; }
         }
-        .message { font-size: 28px; }
-        a { color: #2563eb; text-decoration: none; }
-        a:hover { text-decoration: underline; }
     </style>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta charset="utf-8" />
+    <meta name="description" content="Project 1 - Colorizing the Prokudin-Gorskii photo collection" />
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
 </head>
 <body>
-    <div class="glass">
-        <div class="message">Under Construction</div>
-        <p><a href="../index.html">← Back to Home</a></p>
+    <div class="container">
+        <header class="glass">
+            <img src="../logo.png" alt="UC Berkeley logo" style="height:64px;width:auto;" />
+            <div style="text-align:left;">
+                <h1>Programming Project #1 (proj1)</h1>
+                <p>CS180: Intro to Computer Vision and Computational Photography</p>
+            </div>
+            <nav style="margin-left:auto;"><a href="../index.html">← Back to Home</a></nav>
+        </header>
+
+        <section class="card glass">
+            <h2>Images of the Russian Empire: Colorizing the Prokudin-Gorskii photo collection</h2>
+            <p>Red-Green-Blue Example</p>
+            <p>Due Date: September 12, 2025 at 11:59 PM</p>
+            <div class="two-up hero" aria-label="Unaligned versus aligned example">
+                <img src="./example_unaligned.jpg" alt="Unaligned stacked color channels" />
+                <div class="arrow" aria-hidden="true">→</div>
+                <img src="./example_aligned.png" alt="Aligned color image" />
+            </div>
+        </section>
+
+        
+
+        <section class="card glass">
+            <h2>Approach (High-Level)</h2>
+            <p><strong>Goal</strong>: Reconstruct a clean color image by extracting the three monochrome plates (B, G, R), aligning them precisely, and stacking them into an RGB image with minimal artifacts.</p>
+            <p>
+                I first inspected the input plates. There is clear correlation across channels at the same pixel
+                locations: brighter pixels in one channel are usually brighter in the others (not always, but mostly).
+                However, overall illumination and contrast differ between channels, so raw intensities are on different
+                scales.
+            </p>
+            <p>
+                This suggested using a pixelwise distance metric to quantify alignment quality: if the plates are well
+                aligned, the sum of per-pixel distances should be small. To avoid getting stuck in local minima (which
+                can happen if you only move greedily in the locally best direction), I evaluate the total distance for
+                many candidate shifts and choose the shift with the lowest global score.
+            </p>
+            <p>
+                I started with an exhaustive search over translations using the <strong>L2 distance</strong> on raw pixel values.
+                This already produced good alignments for many images. However, some cases like the <em>emir</em> still failed
+                due to cross‑channel brightness differences, for example clearly visible in his very colorful dress.
+            </p>
+            <p>
+                I first tried per‑channel min–max scaling to normalize dynamic range, but results were unstable since
+                extrema are image‑dependent and sensitive to outliers. I then switched to per‑channel
+                <strong>z‑normalization</strong> (standardizing to zero mean and unit variance) before scoring so that structures
+                became more comparable across channels despite overall brightness/gain differences.
+            </p>
+            <p><strong>L2 distance</strong> between two patches/channels I and J:</p>
+            <div class="formula">\[ \|I - J\|_2 = \sqrt{\sum_i (I_i - J_i)^2} \]</div>
+            <p><strong>Z-normalization</strong> of a channel X:</p>
+            <div class="formula">\[ z(x) = \frac{x - \mu}{\sigma} \quad \text{where } \mu = \mathrm{mean}(X),\; \sigma = \mathrm{std}(X) \]</div>
+            <p>
+                Despite z‑normalization, a few images remained challenging. I therefore added
+                <strong>Normalized Cross‑Correlation (NCC)</strong> as the matching score. Intuition: NCC compares
+                zero‑mean, normalized patches and is invariant to linear brightness/contrast changes, making it better
+                suited when channels have different gains.
+            </p>
+            <div class="formula">\[ \mathrm{NCC}(I, J) = \frac{\sum_i (I_i - \bar I)(J_i - \bar J)}{\sqrt{\sum_i (I_i - \bar I)^2}\;\sqrt{\sum_i (J_i - \bar J)^2}} \]</div>
+            <p>
+                In practice, I z‑normalize or zero‑center patches and evaluate NCC over the search window, taking the
+                displacement with the highest score. This made the alignment robust across all images, including
+                difficult cases like the emir.
+            </p>
+            <p>
+                For rendering the final RGB image, after alignment I min–max normalized each channel independently to the
+                display range and then stacked them as R, G, and B (i.e., (x − min)/(max − min)).
+            </p>
+            <h3>Coarse‑to‑Fine Pyramid</h3>
+            <p>
+                To make alignment efficient on large glass plates, I use a multi-scale (coarse‑to‑fine) image pyramid:
+            </p>
+            <p><strong>Intuition</strong>: Computing scores (e.g., L2, NCC) over many shifts on full‑resolution images is expensive. Start at a much smaller resolution to get a cheap, rough alignment; then iteratively double the size and refine around that estimate. This minimizes the total number of evaluations overall, with only a few refinements needed at full resolution.</p>
+            <img src="./pyramid.png" alt="Coarse-to-fine image pyramid visualization" style="display:block;margin:12px auto;max-width:100%;height:auto;border-radius:12px;" />
+            <p style="text-align:center;margin:4px 0 0;">
+                <small>Source: <a href="https://iipimage.sourceforge.io/documentation/images/" target="_blank" rel="noopener noreferrer">IIPImage documentation</a></small>
+            </p>
+            <ol>
+                <li>Build a pyramid by halving resolution until another downscale would make the smallest dimension &lt; 32 px (min base ≈ 32×32).</li>
+                <li>At the coarsest level, stack the channels and run an exhaustive search with a ±8 px radius to find the best translation.</li>
+                <li>Propagate the displacement to the next finer level (scale ×2), then refine within a small local window of ±2 px (top/bottom/left/right).</li>
+                <li>Repeat to full resolution, optionally re‑normalizing and scoring on interior pixels to avoid border effects.</li>
+            </ol>
+            <p class="muted">NCC windowing: at the smallest level I split the image into a 2×2 grid and evaluated NCC per cell; at the next level (2× bigger) into a 4×4 grid, and so on. This keeps the NCC window size approximately constant in absolute terms across scales.</p>
+            <p>
+                Using a larger window (±8) only at the coarsest level and a tighter window (±2) at finer levels dramatically reduces the global search space while preserving final alignment accuracy.
+            </p>
+            <h3>Results (Aligned RGB)</h3>
+            <p class="muted">Outputs produced with the coarse‑to‑fine alignment and per‑channel min–max rendering.</p>
+            <div class="grid">
+                <figure><img src="./1/cathedral.png" alt="cathedral" /><figcaption>cathedral</figcaption></figure>
+                <figure><img src="./1/church.png" alt="church" /><figcaption>church</figcaption></figure>
+                <figure><img src="./1/emir.png" alt="emir" /><figcaption>emir</figcaption></figure>
+                <figure><img src="./1/harvesters.png" alt="harvesters" /><figcaption>harvesters</figcaption></figure>
+                <figure><img src="./1/icon.png" alt="icon" /><figcaption>icon</figcaption></figure>
+                <figure><img src="./1/italil.png" alt="italil" /><figcaption>italil</figcaption></figure>
+                <figure><img src="./1/lastochikino.png" alt="lastochikino" /><figcaption>lastochikino</figcaption></figure>
+                <figure><img src="./1/lugano.png" alt="lugano" /><figcaption>lugano</figcaption></figure>
+                <figure><img src="./1/melons.png" alt="melons" /><figcaption>melons</figcaption></figure>
+                <figure><img src="./1/monastery.png" alt="monastery" /><figcaption>monastery</figcaption></figure>
+                <figure><img src="./1/self_portrait.png" alt="self_portrait" /><figcaption>self_portrait</figcaption></figure>
+                <figure><img src="./1/siren.png" alt="siren" /><figcaption>siren</figcaption></figure>
+                <figure><img src="./1/three_generations.png" alt="three_generations" /><figcaption>three_generations</figcaption></figure>
+                <figure><img src="./1/tobolsk.png" alt="tobolsk" /><figcaption>tobolsk</figcaption></figure>
+            </div>
+            <h4 style="margin-top:16px;">Alignment Offsets and Compute Times (Combined L2 + NCC)</h4>
+            <p class="muted">Convention: positive dy = down, negative dy = up; positive dx = right, negative dx = left.</p>
+            <table class="table table-slim">
+                <thead>
+                    <tr>
+                        <th>Image</th>
+                        <th>B→G shift</th>
+                        <th>R→G shift</th>
+                        <th style="text-align:right;">Total time (s)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>cathedral</td><td>up 5 px, left 2 px</td><td>down 7 px, right 1 px</td><td style="text-align:right;">0.388</td></tr>
+                    <tr><td>church</td><td>up 25 px, left 4 px</td><td>down 33 px, left 8 px</td><td style="text-align:right;">30.243</td></tr>
+                    <tr><td>emir</td><td>up 49 px, left 22 px</td><td>down 57 px, right 18 px</td><td style="text-align:right;">30.524</td></tr>
+                    <tr><td>harvesters</td><td>up 59 px, left 16 px</td><td>down 64 px, left 2 px</td><td style="text-align:right;">30.019</td></tr>
+                    <tr><td>icon</td><td>up 39 px, left 17 px</td><td>down 48 px, right 5 px</td><td style="text-align:right;">30.702</td></tr>
+                    <tr><td>italil</td><td>up 38 px, left 21 px</td><td>down 39 px, right 15 px</td><td style="text-align:right;">30.655</td></tr>
+                    <tr><td>lastochikino</td><td>down 2 px, right 2 px</td><td>down 78 px, left 7 px</td><td style="text-align:right;">30.435</td></tr>
+                    <tr><td>lugano</td><td>up 40 px, right 15 px</td><td>down 53 px, left 13 px</td><td style="text-align:right;">30.780</td></tr>
+                    <tr><td>melons</td><td>up 81 px, left 10 px</td><td>down 96 px, right 4 px</td><td style="text-align:right;">31.156</td></tr>
+                    <tr><td>monastery</td><td>down 3 px, left 2 px</td><td>down 6 px, right 1 px</td><td style="text-align:right;">0.377</td></tr>
+                    <tr><td>self_portrait</td><td>up 78 px, left 29 px</td><td>down 98 px, right 8 px</td><td style="text-align:right;">30.837</td></tr>
+                    <tr><td>siren</td><td>up 48 px, right 6 px</td><td>down 47 px, left 18 px</td><td style="text-align:right;">32.307</td></tr>
+                    <tr><td>three_generations</td><td>up 50 px, left 15 px</td><td>down 58 px, left 4 px</td><td style="text-align:right;">30.443</td></tr>
+                    <tr><td>tobolsk</td><td>down 3 px, left 3 px</td><td>down 4 px</td><td style="text-align:right;">0.387</td></tr>
+                </tbody>
+            </table>
+            <h4 style="margin-top:16px;">Additional Results — Prokudin‑Gorskii Collection (my selections)</h4>
+            <div class="grid">
+                <figure><img src="./1_extra/city.png" alt="Prokudin-Gorskii extra - city" /><figcaption>city (collection)</figcaption></figure>
+                <figure><img src="./1_extra/gate.png" alt="Prokudin-Gorskii extra - gate" /><figcaption>gate (collection)</figcaption></figure>
+                <figure><img src="./1_extra/tippy.png" alt="Prokudin-Gorskii extra - tippy" /><figcaption>tippy (collection — downloaded picture was already aligned, my algorithm found the same alignment, as no extra borders around are visible)</figcaption></figure>
+                <figure><img src="./1_extra/water.png" alt="Prokudin-Gorskii extra - water" /><figcaption>water (collection)</figcaption></figure>
+            </div>
+        </section>
+
+        <section class="card glass">
+            <h2>Bells &amp; Whistles Results</h2>
+            <p>Below are result summaries for each enhancement, with brief approach notes and before/after comparisons.</p>
+        </section>
+
+        <section class="card glass">
+            <h3>Automatic cropping</h3>
+            <p><strong>Approach</strong>: Briefly describe border detection (e.g., edge/variance/consensus across channels) and crop strategy.</p>
+            <div class="two-up">
+                <div class="placeholder">Before</div>
+                <div class="placeholder">After</div>
+            </div>
+            
+        </section>
+
+        <section class="card glass">
+            <h3>Automatic contrasting</h3>
+            <h4>Motivation</h4>
+            <p>Global methods (min–max scaling or vanilla histogram equalization) can either leave low‑contrast regions flat or push highlights/shadows too far. Many Prokudin‑Gorskii images have locally varying illumination; we need a method that enhances texture and structure region‑by‑region without amplifying noise or creating halos.</p>
+            <h4>Approach</h4>
+            <p>Contrast Limited Adaptive Histogram Equalization (CLAHE). Intuition: global histogram equalization often overdrives highlights/shadows or misses local detail. CLAHE boosts contrast <em>locally</em> by operating on small tiles while capping how much any intensity bin can grow (the clip limit) to avoid noise blow‑ups.</p>
+            <ul>
+                <li><strong>Per‑tile equalization</strong>: Divide the image into <strong>8×8</strong> tiles. For each tile: build its histogram, clip each bin at a limit <em>T</em>, redistribute the overflow evenly, compute the clipped CDF, and remap that tile’s pixels to span the range.</li>
+                <li><strong>Clip limit</strong>: <em>T</em> caps how much any intensity bin can grow, preventing noise or small peaks from dominating low‑contrast regions.</li>
+                <li><strong>Seamless blending</strong>: For every pixel, bilinearly interpolate the remapping from the four surrounding tiles so there are no borders between tiles.</li>
+            </ul>
+            <p>Effect: dark regions gain detail, bright regions recover texture, and overall contrast increases without harsh artifacts common in naive equalization.</p>
+            <h4>Before &amp; After Results</h4>
+            <div class="two-up">
+                <div class="compare" data-compare>
+                    <img class="compare-base" src="./3_contrast/lugano_old.png" alt="Original contrast (Lugano)" />
+                    <div class="compare-overlay" style="clip-path: inset(0 0 0 50%)">
+                        <img src="./3_contrast/lugano_new.png" alt="Enhanced contrast (Lugano)" />
+                    </div>
+                    <div class="compare-handle" style="left:50%"></div>
+                    <span class="compare-label left">Original</span>
+                    <span class="compare-label right">Enhanced</span>
+                </div>
+                <div class="compare" data-compare>
+                    <img class="compare-base" src="./3_contrast/self_portrait_old.png" alt="Original contrast (Self Portrait)" />
+                    <div class="compare-overlay" style="clip-path: inset(0 0 0 50%)">
+                        <img src="./3_contrast/self_portrait_new.png" alt="Enhanced contrast (Self Portrait)" />
+                    </div>
+                    <div class="compare-handle" style="left:50%"></div>
+                    <span class="compare-label left">Original</span>
+                    <span class="compare-label right">Enhanced</span>
+                </div>
+            </div>
+            <p class="muted">The enhanced versions breathe noticeably more contrast and clarity, giving a crisper, more lifelike appearance; by comparison, the originals feel slightly soft and subdued.</p>
+            
+        </section>
+
+        <section class="card glass">
+            <h3>Automatic white balance</h3>
+            <h4>Motivation</h4>
+            <p>Channels often have different gains/illumination, leading to color casts (e.g., blue/green tint). We aim to estimate a neutral illuminant and re-scale channels so neutrals appear gray/white.</p>
+            <h4>Approach</h4>
+            <p><strong>Gray‑World algorithm</strong>. Intuition: under a neutral illuminant, the spatial average of an image should be achromatic (gray). If an image has a color cast, the per‑channel means differ; we correct this by scaling each channel so their means match a common gray target.</p>
+            <ul>
+                <li><strong>Compute means</strong>: \(\mu_R,\ \mu_G,\ \mu_B\) over interior pixels (optionally exclude borders/outliers).</li>
+                <li><strong>Choose gray target</strong>: I use the <em>average of the channel means</em>, \(\mu_{\text{target}} = (\mu_R + \mu_G + \mu_B)/3\).</li>
+                <li><strong>Scale channels</strong>: apply gains \(s_c = \mu_{\text{target}} / \mu_c\) to each channel \(c \in \{R,G,B\}\), then clip to the display range.</li>
+            </ul>
+            <div class="formula">\[ s_c = \frac{\mu_{\text{target}}}{\mu_c}, \quad X'_c = \operatorname{clip}(s_c \cdot X_c) \]</div>
+            <p>This neutralizes global color casts while preserving relative contrasts; using interior pixels and clipping avoids bias from borders and outliers.</p>
+            <p class="muted">Implementation note: I used the <strong>average-of-means</strong> gray target \(\mu_{\text{target}} = (\mu_R+\mu_G+\mu_B)/3\) (not a fixed 0.5), and clipped per-channel gains to a safe range before applying them.</p>
+            <h4>Before &amp; After Results</h4>
+            <div class="two-up">
+                <div class="compare" data-compare>
+                    <img class="compare-base" src="./4_white-balance/emir_old.png" alt="Original white balance (Emir)" />
+                    <div class="compare-overlay" style="clip-path: inset(0 0 0 50%)">
+                        <img src="./4_white-balance/emir_new.png" alt="White-balanced result (Emir)" />
+                    </div>
+                    <div class="compare-handle" style="left:50%"></div>
+                    <span class="compare-label left">Original</span>
+                    <span class="compare-label right">White-balanced</span>
+                </div>
+                <div class="compare" data-compare>
+                    <img class="compare-base" src="./4_white-balance/church_old.png" alt="Original white balance (Church)" />
+                    <div class="compare-overlay" style="clip-path: inset(0 0 0 50%)">
+                        <img src="./4_white-balance/church_new.png" alt="White-balanced result (Church)" />
+                    </div>
+                    <div class="compare-handle" style="left:50%"></div>
+                    <span class="compare-label left">Original</span>
+                    <span class="compare-label right">White-balanced</span>
+                </div>
+            </div>
+            <p class="muted">Assuming the Emir’s hat and the church facade are meant to be white, the Gray‑World correction makes these regions appear white in the new images—whereas they showed clear color casts in the originals.</p>
+            
+        </section>
+
+        <section class="card glass">
+            <h3>Better color mapping</h3>
+            <h4>Motivation</h4>
+            <p>Channel gains and spectral responses can differ; simple per‑channel scaling (white balance) may not fully capture cross‑channel interactions. I explored small color transforms to find a mapping that looks most realistic.</p>
+            <h4>Approach</h4>
+            <p>I brute‑forced a set of lightweight transforms and rendered them into a grid: per‑channel diagonal gains (±R/G/B, warm/cool/magenta) and simple cross‑channel mixes (e.g., add a small fraction of G into R). I then visually selected the most natural‑looking result from the grid.</p>
+            <p class="muted">Grid setup (examples): diagonal variants, and mixes such as R' ← R + ε·G, G' ← G + ε·B, B' ← B + ε·G with ε ≈ 0.25. Images were normalized and shown side‑by‑side for quick comparison.</p>
+            <h4>Chosen mapping (bottom‑right tile)</h4>
+            <p>I picked the bottom‑right tile of the grid as the final mapping. This corresponds to a subtle <em>blue‑from‑green</em> mix:</p>
+            <div class="formula">\[ B' = (1-\varepsilon)\,B + \varepsilon\,G, \quad G' = G, \quad R' = R, \;\; \text{with } \varepsilon \approx 0.25. \]</div>
+            <p>Intuition: adding a touch of green into blue reduces residual magenta casts and improves foliage/sky balance without over‑saturating reds.</p>
+            <h4 style="margin-top:12px;">Grid and comparison (tippy)</h4>
+            <div class="two-up">
+                <figure style="flex:1 1 0; margin:0;">
+                    <img src="./5/tippy_grid.png" alt="Color mapping variant grid for tippy" style="display:block;max-width:100%;height:auto;border-radius:12px;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Variant grid (tippy)</figcaption>
+                </figure>
+                <div class="compare" data-compare>
+                    <img class="compare-base" src="./5/tippy_old.png" alt="Tippy before color mapping" />
+                    <div class="compare-overlay" style="clip-path: inset(0 0 0 50%)">
+                        <img src="./5/tippy_new.png" alt="Tippy after chosen color mapping" />
+                    </div>
+                    <div class="compare-handle" style="left:50%"></div>
+                    <span class="compare-label left">Original</span>
+                    <span class="compare-label right">Mapped</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="card glass">
+            <h3>Better features</h3>
+            <h4>Gradient-based approach</h4>
+            <p>Intuition: edges are places where neighboring pixels differ strongly. Compute horizontal and vertical finite differences, then combine them into a gradient magnitude and normalize. This captures structure while being less sensitive to absolute brightness.</p>
+            <div class="formula">\[ G_x(x,y) = I(x+1,y) - I(x-1,y), \quad G_y(x,y) = I(x,y+1) - I(x,y-1) \]</div>
+            <div class="formula">\[ |\nabla I|(x,y) = \sqrt{ G_x(x,y)^2 + G_y(x,y)^2 }, \quad \hat G = \frac{|\nabla I| - \mu}{\sigma} \]</div>
+            <ul>
+                <li><strong>Computation</strong>: For each channel independently, apply the finite differences above, form the magnitude, min–max to [0,1] if needed, then z‑normalize (zero mean, unit variance).</li>
+                <li><strong>Why it helps</strong>: Gradients emphasize shared structure across channels while down‑weighting absolute intensity/gain differences.</li>
+            </ul>
+            <h4>Alignment</h4>
+            <p>For each candidate shift, I evaluate <strong>equal‑weight NCC and L2</strong> on the gradient maps and pick the best shift in a coarse‑to‑fine pyramid (same window schedule as before).</p>
+            <div class="two-up">
+                <figure style="flex:1 1 0;">
+                    <img src="./6_edges/church_edges_B.png" alt="Church gradient map (Blue channel)" style="display:block;max-width:320px;width:100%;height:auto;border-radius:12px;margin:0 auto;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Gradient map — Blue channel</figcaption>
+                </figure>
+                <figure style="flex:1 1 0;">
+                    <img src="./6_edges/church_edges_G.png" alt="Church gradient map (Green channel)" style="display:block;max-width:320px;width:100%;height:auto;border-radius:12px;margin:0 auto;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Gradient map — Green channel</figcaption>
+                </figure>
+            </div>
+            <p class="muted" style="margin-top:8px;">These gradient maps are used directly for alignment: the algorithm aligns on gradients (not raw intensities) using equal‑weight NCC and L2.</p>
+            <div style="display:flex;justify-content:center;margin-top:12px;">
+                <img src="./6_edges/church.png" alt="Aligned RGB result (church)" style="display:block;max-width:520px;width:100%;height:auto;border-radius:12px;" />
+            </div>
+            <p class="muted" style="margin-top:8px;">Finding: On this dataset, gradients+NCC/L2 did <strong>not</strong> outperform the prior method in a significant way, but it was a useful experiment that confirmed alignment robustness to brightness changes.</p>
+        </section>
+
+        
+
+        
     </div>
+    <div id="lightbox" class="lightbox" aria-hidden="true" role="dialog" aria-label="Expanded image viewer">
+        <button class="close" aria-label="Close">×</button>
+        <img alt="Expanded result" src="" />
+    </div>
+    <script>
+    (function(){
+        function init(el){
+            var overlay = el.querySelector('.compare-overlay');
+            var handle = el.querySelector('.compare-handle');
+            if(!overlay || !handle) return;
+            var dragging = false;
+            function setX(clientX){
+                var r = el.getBoundingClientRect();
+                var pct = (clientX - r.left) / r.width;
+                if (pct < 0) pct = 0; if (pct > 1) pct = 1;
+                var perc = (pct*100).toFixed(2) + '%';
+                overlay.style.clipPath = 'inset(0 0 0 calc(' + perc + '))';
+                handle.style.left = perc;
+            }
+            function onDown(e){ dragging = true; e.preventDefault(); }
+            function onMove(e){ if(!dragging) return; setX(e.clientX || (e.touches && e.touches[0].clientX)); }
+            function onUp(){ dragging = false; }
+            handle.addEventListener('mousedown', onDown);
+            window.addEventListener('mousemove', onMove);
+            window.addEventListener('mouseup', onUp);
+            handle.addEventListener('touchstart', onDown, {passive:false});
+            window.addEventListener('touchmove', onMove, {passive:false});
+            window.addEventListener('touchend', onUp);
+            el.addEventListener('click', function(e){ setX(e.clientX); });
+        }
+        document.querySelectorAll('[data-compare]').forEach(init);
+    })();
+    (function(){
+        var lb = document.getElementById('lightbox');
+        if(!lb) return;
+        var lbImg = lb.querySelector('img');
+        var closeBtn = lb.querySelector('.close');
+        function open(src, alt){ lbImg.src = src; lbImg.alt = alt || 'Expanded result'; lb.classList.add('open'); lb.setAttribute('aria-hidden','false'); }
+        function close(){ lb.classList.remove('open'); lb.setAttribute('aria-hidden','true'); lbImg.src = ''; }
+        document.addEventListener('click', function(e){
+            var img = e.target.closest('.grid img, .two-up.hero img, .compare img');
+            if(img){ open(img.getAttribute('src'), img.getAttribute('alt')); }
+        });
+        closeBtn.addEventListener('click', close);
+        lb.addEventListener('click', function(e){ if(e.target === lb) close(); });
+        window.addEventListener('keydown', function(e){ if(e.key === 'Escape') close(); });
+    })();
+    </script>
 </body>
 </html>
-
-

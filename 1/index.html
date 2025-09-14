@@ -166,7 +166,7 @@
             <div class="two-up hero" aria-label="Unaligned versus aligned example">
                 <img src="./example_unaligned.jpg" alt="Unaligned stacked color channels" />
                 <div class="arrow" aria-hidden="true">→</div>
-                <img src="./example_aligned.png" alt="Aligned color image" />
+                <img src="./example_aligned.jpg" alt="Aligned color image" />
             </div>
         </section>
 
@@ -218,9 +218,7 @@
             <h3>Low‑resolution results (JPEG, brute force)</h3>
             
             <div class="grid">
-                <figure><img src="./1/jpeg/cathedral.png" alt="cathedral (JPEG brute force)" /><figcaption>cathedral (JPEG)</figcaption></figure>
-                <figure><img src="./1/jpeg/monastery.png" alt="monastery (JPEG brute force)" /><figcaption>monastery (JPEG)</figcaption></figure>
-                <figure><img src="./1/jpeg/tobolsk.png" alt="tobolsk (JPEG brute force)" /><figcaption>tobolsk (JPEG)</figcaption></figure>
+                <figure><img src="./1/jpeg/cathedral.jpg" alt="cathedral (JPEG brute force)" /><figcaption>cathedral (JPEG)</figcaption></figure>
             </div>
             <p class="muted">However, because high‑resolution TIFFs are also available, a faster approach is needed for those larger images.</p>
             
@@ -230,7 +228,7 @@
                 To make alignment efficient on large glass plates, I use a multi-scale (coarse‑to‑fine) image pyramid:
             </p>
             <p><strong>Intuition</strong>: Computing scores (e.g., L2, NCC) over many shifts on full‑resolution images is expensive. Start at a much smaller resolution to get a cheap, rough alignment; then iteratively double the size and refine around that estimate. This minimizes the total number of evaluations overall, with only a few refinements needed at full resolution.</p>
-            <img src="./pyramid.png" alt="Coarse-to-fine image pyramid visualization" style="display:block;margin:12px auto;max-width:100%;height:auto;border-radius:12px;" />
+            <img src="./pyramid.jpg" alt="Coarse-to-fine image pyramid visualization" style="display:block;margin:12px auto;max-width:100%;height:auto;border-radius:12px;" />
             <p style="text-align:center;margin:4px 0 0;">
                 <small>Source: <a href="https://iipimage.sourceforge.io/documentation/images/" target="_blank" rel="noopener noreferrer">IIPImage documentation</a></small>
             </p>
@@ -247,17 +245,17 @@
             <h3>Results (Aligned RGB, high‑res TIFF, pyramid)</h3>
             <p class="muted">Outputs produced on the high‑resolution TIFFs using the coarse‑to‑fine alignment and per‑channel min–max rendering.</p>
             <div class="grid">
-                <figure><img src="./1/tiff/church.png" alt="church (TIFF pyramid)" /><figcaption>church (TIFF)</figcaption></figure>
-                <figure><img src="./1/tiff/emir.png" alt="emir (TIFF pyramid)" /><figcaption>emir (TIFF)</figcaption></figure>
-                <figure><img src="./1/tiff/harvesters.png" alt="harvesters (TIFF pyramid)" /><figcaption>harvesters (TIFF)</figcaption></figure>
-                <figure><img src="./1/tiff/icon.png" alt="icon (TIFF pyramid)" /><figcaption>icon (TIFF)</figcaption></figure>
-                <figure><img src="./1/tiff/italil.png" alt="italil (TIFF pyramid)" /><figcaption>italil (TIFF)</figcaption></figure>
-                <figure><img src="./1/tiff/lastochikino.png" alt="lastochikino (TIFF pyramid)" /><figcaption>lastochikino (TIFF)</figcaption></figure>
-                <figure><img src="./1/tiff/lugano.png" alt="lugano (TIFF pyramid)" /><figcaption>lugano (TIFF)</figcaption></figure>
-                <figure><img src="./1/tiff/melons.png" alt="melons (TIFF pyramid)" /><figcaption>melons (TIFF)</figcaption></figure>
-                <figure><img src="./1/tiff/self_portrait.png" alt="self_portrait (TIFF pyramid)" /><figcaption>self_portrait (TIFF)</figcaption></figure>
-                <figure><img src="./1/tiff/siren.png" alt="siren (TIFF pyramid)" /><figcaption>siren (TIFF)</figcaption></figure>
-                <figure><img src="./1/tiff/three_generations.png" alt="three_generations (TIFF pyramid)" /><figcaption>three_generations (TIFF)</figcaption></figure>
+                <figure><img src="./1/tiff/church.jpg" alt="church (TIFF pyramid)" /><figcaption>church (TIFF)</figcaption></figure>
+                <figure><img src="./1/tiff/emir.jpg" alt="emir (TIFF pyramid)" /><figcaption>emir (TIFF)</figcaption></figure>
+                <figure><img src="./1/tiff/harvesters.jpg" alt="harvesters (TIFF pyramid)" /><figcaption>harvesters (TIFF)</figcaption></figure>
+                <figure><img src="./1/tiff/icon.jpg" alt="icon (TIFF pyramid)" /><figcaption>icon (TIFF)</figcaption></figure>
+                <figure><img src="./1/tiff/italil.jpg" alt="italil (TIFF pyramid)" /><figcaption>italil (TIFF)</figcaption></figure>
+                <figure><img src="./1/tiff/lastochikino.jpg" alt="lastochikino (TIFF pyramid)" /><figcaption>lastochikino (TIFF)</figcaption></figure>
+                <figure><img src="./1/tiff/lugano.jpg" alt="lugano (TIFF pyramid)" /><figcaption>lugano (TIFF)</figcaption></figure>
+                <figure><img src="./1/tiff/melons.jpg" alt="melons (TIFF pyramid)" /><figcaption>melons (TIFF)</figcaption></figure>
+                <figure><img src="./1/tiff/self_portrait.jpg" alt="self_portrait (TIFF pyramid)" /><figcaption>self_portrait (TIFF)</figcaption></figure>
+                <figure><img src="./1/tiff/siren.jpg" alt="siren (TIFF pyramid)" /><figcaption>siren (TIFF)</figcaption></figure>
+                <figure><img src="./1/tiff/three_generations.jpg" alt="three_generations (TIFF pyramid)" /><figcaption>three_generations (TIFF)</figcaption></figure>
             </div>
             <h4 style="margin-top:16px;">Alignment Offsets and Compute Times (Combined L2 + NCC)</h4>
             
@@ -289,10 +287,10 @@
             </table>
             <h4 style="margin-top:16px;">Additional Results — Prokudin‑Gorskii Collection (my selections)</h4>
             <div class="grid">
-                <figure><img src="./1_extra/city.png" alt="Prokudin-Gorskii extra - city" /><figcaption>city (collection)</figcaption></figure>
-                <figure><img src="./1_extra/gate.png" alt="Prokudin-Gorskii extra - gate" /><figcaption>gate (collection)</figcaption></figure>
-                <figure><img src="./1_extra/tippy.png" alt="Prokudin-Gorskii extra - tippie" /><figcaption>tippie (collection — downloaded picture was already aligned, my algorithm found the same alignment, as no extra borders around are visible)</figcaption></figure>
-                <figure><img src="./1_extra/water.png" alt="Prokudin-Gorskii extra - water" /><figcaption>water (collection)</figcaption></figure>
+                <figure><img src="./1_extra/city.jpg" alt="Prokudin-Gorskii extra - city" /><figcaption>city (collection)</figcaption></figure>
+                <figure><img src="./1_extra/gate.jpg" alt="Prokudin-Gorskii extra - gate" /><figcaption>gate (collection)</figcaption></figure>
+                <figure><img src="./1_extra/tippy.jpg" alt="Prokudin-Gorskii extra - tippie" /><figcaption>tippie (collection — downloaded picture was already aligned, my algorithm found the same alignment, as no extra borders around are visible)</figcaption></figure>
+                <figure><img src="./1_extra/water.jpg" alt="Prokudin-Gorskii extra - water" /><figcaption>water (collection)</figcaption></figure>
             </div>
         </section>
 
@@ -316,15 +314,15 @@
             <p class="muted">Limitation: in some cases, adjacent strong whites and blacks can blend (e.g., via blur/compression/downsampling) into gray along a line, weakening the extreme‑pixel signal and causing under‑detection of borders. The 4‑of‑5 neighbor voting and per‑channel processing help, but are not perfect; tightening thresholds or the extreme‑fraction can further improve those edge cases.</p>
             <div class="two-up">
                 <figure style="flex:1 1 0; margin:0;">
-                    <img src="./2/cathedral_B.png" alt="Per-channel crop box (cathedral, B)" style="display:block;max-width:100%;height:auto;border-radius:12px; outline: 2px solid #0f172a; outline-offset: 4px;" />
+                    <img src="./2/cathedral_B.jpg" alt="Per-channel crop box (cathedral, B)" style="display:block;max-width:100%;height:auto;border-radius:12px; outline: 2px solid #0f172a; outline-offset: 4px;" />
                     <figcaption class="muted" style="text-align:center;margin-top:6px;">Cathedral — B channel (red box = crop)</figcaption>
                 </figure>
                 <figure style="flex:1 1 0; margin:0;">
-                    <img src="./2/cathedral_G.png" alt="Per-channel crop box (cathedral, G)" style="display:block;max-width:100%;height:auto;border-radius:12px; outline: 2px solid #0f172a; outline-offset: 4px;" />
+                    <img src="./2/cathedral_G.jpg" alt="Per-channel crop box (cathedral, G)" style="display:block;max-width:100%;height:auto;border-radius:12px; outline: 2px solid #0f172a; outline-offset: 4px;" />
                     <figcaption class="muted" style="text-align:center;margin-top:6px;">Cathedral — G channel (red box = crop)</figcaption>
                 </figure>
                 <figure style="flex:1 1 0; margin:0;">
-                    <img src="./2/cathedral_R.png" alt="Per-channel crop box (cathedral, R)" style="display:block;max-width:100%;height:auto;border-radius:12px; outline: 2px solid #0f172a; outline-offset: 4px;" />
+                    <img src="./2/cathedral_R.jpg" alt="Per-channel crop box (cathedral, R)" style="display:block;max-width:100%;height:auto;border-radius:12px; outline: 2px solid #0f172a; outline-offset: 4px;" />
                     <figcaption class="muted" style="text-align:center;margin-top:6px;">Cathedral — R channel (red box = crop)</figcaption>
                 </figure>
             </div>
@@ -355,18 +353,18 @@
             <h4>Before &amp; After Results</h4>
             <div class="two-up">
                 <div class="compare" data-compare>
-                    <img class="compare-base" src="./3_contrast/lugano_old.png" alt="Original contrast (Lugano)" />
+                    <img class="compare-base" src="./3_contrast/lugano_old.jpg" alt="Original contrast (Lugano)" />
                     <div class="compare-overlay" style="clip-path: inset(0 0 0 50%)">
-                        <img src="./3_contrast/lugano_new.png" alt="Enhanced contrast (Lugano)" />
+                        <img src="./3_contrast/lugano_new.jpg" alt="Enhanced contrast (Lugano)" />
                     </div>
                     <div class="compare-handle" style="left:50%"></div>
                     <span class="compare-label left">Original</span>
                     <span class="compare-label right">Enhanced</span>
                 </div>
                 <div class="compare" data-compare>
-                    <img class="compare-base" src="./3_contrast/self_portrait_old.png" alt="Original contrast (Self Portrait)" />
+                    <img class="compare-base" src="./3_contrast/self_portrait_old.jpg" alt="Original contrast (Self Portrait)" />
                     <div class="compare-overlay" style="clip-path: inset(0 0 0 50%)">
-                        <img src="./3_contrast/self_portrait_new.png" alt="Enhanced contrast (Self Portrait)" />
+                        <img src="./3_contrast/self_portrait_new.jpg" alt="Enhanced contrast (Self Portrait)" />
                     </div>
                     <div class="compare-handle" style="left:50%"></div>
                     <span class="compare-label left">Original</span>
@@ -394,18 +392,18 @@
             <h4>Before &amp; After Results</h4>
             <div class="two-up">
                 <div class="compare" data-compare>
-                    <img class="compare-base" src="./4_white-balance/emir_old.png" alt="Original white balance (Emir)" />
+                    <img class="compare-base" src="./4_white-balance/emir_old.jpg" alt="Original white balance (Emir)" />
                     <div class="compare-overlay" style="clip-path: inset(0 0 0 50%)">
-                        <img src="./4_white-balance/emir_new.png" alt="White-balanced result (Emir)" />
+                        <img src="./4_white-balance/emir_new.jpg" alt="White-balanced result (Emir)" />
                     </div>
                     <div class="compare-handle" style="left:50%"></div>
                     <span class="compare-label left">Original</span>
                     <span class="compare-label right">White-balanced</span>
                 </div>
                 <div class="compare" data-compare>
-                    <img class="compare-base" src="./4_white-balance/church_old.png" alt="Original white balance (Church)" />
+                    <img class="compare-base" src="./4_white-balance/church_old.jpg" alt="Original white balance (Church)" />
                     <div class="compare-overlay" style="clip-path: inset(0 0 0 50%)">
-                        <img src="./4_white-balance/church_new.png" alt="White-balanced result (Church)" />
+                        <img src="./4_white-balance/church_new.jpg" alt="White-balanced result (Church)" />
                     </div>
                     <div class="compare-handle" style="left:50%"></div>
                     <span class="compare-label left">Original</span>
@@ -444,13 +442,13 @@
             <h4 style="margin-top:12px;">Grid and comparison (tippie)</h4>
             <div class="two-up">
                 <figure style="flex:1 1 0; margin:0;">
-                    <img src="./5/tippy_grid.png" alt="Color mapping variant grid for tippie" style="display:block;max-width:100%;height:auto;border-radius:12px;" />
+                    <img src="./5/tippy_grid.jpg" alt="Color mapping variant grid for tippie" style="display:block;max-width:100%;height:auto;border-radius:12px;" />
                     <figcaption class="muted" style="text-align:center;margin-top:6px;">Variant grid (tippie)</figcaption>
                 </figure>
                 <div class="compare" data-compare>
-                    <img class="compare-base" src="./5/tippy_old.png" alt="Tippie before color mapping" />
+                    <img class="compare-base" src="./5/tippy_old.jpg" alt="Tippie before color mapping" />
                     <div class="compare-overlay" style="clip-path: inset(0 0 0 50%)">
-                        <img src="./5/tippy_new.png" alt="Tippie after chosen color mapping" />
+                        <img src="./5/tippy_new.jpg" alt="Tippie after chosen color mapping" />
                     </div>
                     <div class="compare-handle" style="left:50%"></div>
                     <span class="compare-label left">Original</span>
@@ -474,17 +472,17 @@
             <p>For each candidate shift, I evaluate <strong>equal‑weight NCC and L2</strong> on the gradient maps and pick the best shift in a coarse‑to‑fine pyramid (same window schedule as before).</p>
             <div class="two-up">
                 <figure style="flex:1 1 0;">
-                    <img class="expandable" src="./6_edges/church_edges_B.png" alt="Church gradient map (Blue channel)" style="display:block;max-width:320px;width:100%;height:auto;border-radius:12px;margin:0 auto;" />
+                    <img class="expandable" src="./6_edges/church_edges_B.jpg" alt="Church gradient map (Blue channel)" style="display:block;max-width:320px;width:100%;height:auto;border-radius:12px;margin:0 auto;" />
                     <figcaption class="muted" style="text-align:center;margin-top:6px;">Gradient map — Blue channel</figcaption>
                 </figure>
                 <figure style="flex:1 1 0;">
-                    <img class="expandable" src="./6_edges/church_edges_G.png" alt="Church gradient map (Green channel)" style="display:block;max-width:320px;width:100%;height:auto;border-radius:12px;margin:0 auto;" />
+                    <img class="expandable" src="./6_edges/church_edges_G.jpg" alt="Church gradient map (Green channel)" style="display:block;max-width:320px;width:100%;height:auto;border-radius:12px;margin:0 auto;" />
                     <figcaption class="muted" style="text-align:center;margin-top:6px;">Gradient map — Green channel</figcaption>
                 </figure>
             </div>
             <p class="muted" style="margin-top:8px;">These gradient maps are used directly for alignment: the algorithm aligns on gradients (not raw intensities) using equal‑weight NCC and L2.</p>
             <div style="display:flex;justify-content:center;margin-top:12px;">
-                <img class="expandable" src="./6_edges/church.png" alt="Aligned RGB result (church)" style="display:block;max-width:520px;width:100%;height:auto;border-radius:12px;" />
+                <img class="expandable" src="./6_edges/church.jpg" alt="Aligned RGB result (church)" style="display:block;max-width:520px;width:100%;height:auto;border-radius:12px;" />
             </div>
             <p class="muted" style="margin-top:8px;">Finding: On this dataset, gradients+NCC/L2 did <strong>not</strong> outperform the prior method in a significant way, but it was a useful experiment that confirmed alignment robustness to brightness changes.</p>
         </section>

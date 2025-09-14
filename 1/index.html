@@ -42,6 +42,8 @@
             -webkit-backdrop-filter: blur(16px) saturate(180%);
             backdrop-filter: blur(16px) saturate(180%);
         }
+        /* Ensure overlays sit behind content to avoid lightening text */
+        .glass > * { position: relative; z-index: 1; }
         .glass::before {
             content: "";
             position: absolute;
@@ -50,6 +52,7 @@
             pointer-events: none;
             background: radial-gradient(120% 80% at 0% 0%, rgba(255,255,255,0.65), rgba(255,255,255,0) 60%);
             mix-blend-mode: screen;
+            z-index: 0;
         }
         .glass::after {
             content: "";
@@ -58,6 +61,7 @@
             border-radius: inherit;
             pointer-events: none;
             box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -1px 0 rgba(255,255,255,0.35), inset 0 0 40px rgba(255,255,255,0.12);
+            z-index: 0;
         }
         .card { padding: 20px; margin: 20px 0; text-align: left; }
         .muted { color: var(--muted); }
@@ -119,7 +123,7 @@
         .lightbox.open { display: flex; }
         .lightbox img { max-width: 92vw; max-height: 92vh; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.35); }
         .lightbox .close { position: absolute; top: 16px; right: 16px; background: #ffffff; border: none; border-radius: 999px; width: 36px; height: 36px; cursor: pointer; font-size: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.25); }
-        .grid img, .compare img, .two-up.hero img { cursor: zoom-in; }
+        .grid img, .compare img, .two-up.hero img, .expandable { cursor: zoom-in; }
         .compare:hover img { filter: brightness(0.98); }
         /* Zoomed compare (cropped cutout without rescaling images differently) */
         .compare.zoom { height: 360px; }
@@ -159,8 +163,6 @@
 
         <section class="card glass">
             <h2>Images of the Russian Empire: Colorizing the Prokudin-Gorskii photo collection</h2>
-            <p>Red-Green-Blue Example</p>
-            <p>Due Date: September 12, 2025 at 11:59 PM</p>
             <div class="two-up hero" aria-label="Unaligned versus aligned example">
                 <img src="./example_unaligned.jpg" alt="Unaligned stacked color channels" />
                 <div class="arrow" aria-hidden="true">→</div>
@@ -208,15 +210,22 @@
             </p>
             <div class="formula">\[ \mathrm{NCC}(I, J) = \frac{\sum_i (I_i - \bar I)(J_i - \bar J)}{\sqrt{\sum_i (I_i - \bar I)^2}\;\sqrt{\sum_i (J_i - \bar J)^2}} \]</div>
             <p>
-                In practice, I z‑normalize or zero‑center patches and evaluate NCC over the search window, taking the
-                displacement with the highest score. This made the alignment robust across all images, including
-                difficult cases like the emir.
+                In practice, I z‑normalize or zero‑center patches and evaluate NCC over a search window derived by
+                splitting each channel into a small grid of patches; I score candidate shifts across these windows and
+                take the displacement with the highest overall score. This made the alignment robust across all images,
+                including difficult cases like the emir.
             </p>
-            <p>
-                For rendering the final RGB image, after alignment I min–max normalized each channel independently to the
-                display range and then stacked them as R, G, and B (i.e., (x − min)/(max − min)).
-            </p>
+            <h3>Low‑resolution results (JPEG, brute force)</h3>
+            
+            <div class="grid">
+                <figure><img src="./1/jpeg/cathedral.png" alt="cathedral (JPEG brute force)" /><figcaption>cathedral (JPEG)</figcaption></figure>
+                <figure><img src="./1/jpeg/monastery.png" alt="monastery (JPEG brute force)" /><figcaption>monastery (JPEG)</figcaption></figure>
+                <figure><img src="./1/jpeg/tobolsk.png" alt="tobolsk (JPEG brute force)" /><figcaption>tobolsk (JPEG)</figcaption></figure>
+            </div>
+            <p class="muted">However, because high‑resolution TIFFs are also available, a faster approach is needed for those larger images.</p>
+            
             <h3>Coarse‑to‑Fine Pyramid</h3>
+            
             <p>
                 To make alignment efficient on large glass plates, I use a multi-scale (coarse‑to‑fine) image pyramid:
             </p>
@@ -235,26 +244,23 @@
             <p>
                 Using a larger window (±8) only at the coarsest level and a tighter window (±2) at finer levels dramatically reduces the global search space while preserving final alignment accuracy.
             </p>
-            <h3>Results (Aligned RGB)</h3>
-            <p class="muted">Outputs produced with the coarse‑to‑fine alignment and per‑channel min–max rendering.</p>
+            <h3>Results (Aligned RGB, high‑res TIFF, pyramid)</h3>
+            <p class="muted">Outputs produced on the high‑resolution TIFFs using the coarse‑to‑fine alignment and per‑channel min–max rendering.</p>
             <div class="grid">
-                <figure><img src="./1/cathedral.png" alt="cathedral" /><figcaption>cathedral</figcaption></figure>
-                <figure><img src="./1/church.png" alt="church" /><figcaption>church</figcaption></figure>
-                <figure><img src="./1/emir.png" alt="emir" /><figcaption>emir</figcaption></figure>
-                <figure><img src="./1/harvesters.png" alt="harvesters" /><figcaption>harvesters</figcaption></figure>
-                <figure><img src="./1/icon.png" alt="icon" /><figcaption>icon</figcaption></figure>
-                <figure><img src="./1/italil.png" alt="italil" /><figcaption>italil</figcaption></figure>
-                <figure><img src="./1/lastochikino.png" alt="lastochikino" /><figcaption>lastochikino</figcaption></figure>
-                <figure><img src="./1/lugano.png" alt="lugano" /><figcaption>lugano</figcaption></figure>
-                <figure><img src="./1/melons.png" alt="melons" /><figcaption>melons</figcaption></figure>
-                <figure><img src="./1/monastery.png" alt="monastery" /><figcaption>monastery</figcaption></figure>
-                <figure><img src="./1/self_portrait.png" alt="self_portrait" /><figcaption>self_portrait</figcaption></figure>
-                <figure><img src="./1/siren.png" alt="siren" /><figcaption>siren</figcaption></figure>
-                <figure><img src="./1/three_generations.png" alt="three_generations" /><figcaption>three_generations</figcaption></figure>
-                <figure><img src="./1/tobolsk.png" alt="tobolsk" /><figcaption>tobolsk</figcaption></figure>
+                <figure><img src="./1/tiff/church.png" alt="church (TIFF pyramid)" /><figcaption>church (TIFF)</figcaption></figure>
+                <figure><img src="./1/tiff/emir.png" alt="emir (TIFF pyramid)" /><figcaption>emir (TIFF)</figcaption></figure>
+                <figure><img src="./1/tiff/harvesters.png" alt="harvesters (TIFF pyramid)" /><figcaption>harvesters (TIFF)</figcaption></figure>
+                <figure><img src="./1/tiff/icon.png" alt="icon (TIFF pyramid)" /><figcaption>icon (TIFF)</figcaption></figure>
+                <figure><img src="./1/tiff/italil.png" alt="italil (TIFF pyramid)" /><figcaption>italil (TIFF)</figcaption></figure>
+                <figure><img src="./1/tiff/lastochikino.png" alt="lastochikino (TIFF pyramid)" /><figcaption>lastochikino (TIFF)</figcaption></figure>
+                <figure><img src="./1/tiff/lugano.png" alt="lugano (TIFF pyramid)" /><figcaption>lugano (TIFF)</figcaption></figure>
+                <figure><img src="./1/tiff/melons.png" alt="melons (TIFF pyramid)" /><figcaption>melons (TIFF)</figcaption></figure>
+                <figure><img src="./1/tiff/self_portrait.png" alt="self_portrait (TIFF pyramid)" /><figcaption>self_portrait (TIFF)</figcaption></figure>
+                <figure><img src="./1/tiff/siren.png" alt="siren (TIFF pyramid)" /><figcaption>siren (TIFF)</figcaption></figure>
+                <figure><img src="./1/tiff/three_generations.png" alt="three_generations (TIFF pyramid)" /><figcaption>three_generations (TIFF)</figcaption></figure>
             </div>
             <h4 style="margin-top:16px;">Alignment Offsets and Compute Times (Combined L2 + NCC)</h4>
-            <p class="muted">Convention: positive dy = down, negative dy = up; positive dx = right, negative dx = left.</p>
+            
             <table class="table table-slim">
                 <thead>
                     <tr>
@@ -285,7 +291,7 @@
             <div class="grid">
                 <figure><img src="./1_extra/city.png" alt="Prokudin-Gorskii extra - city" /><figcaption>city (collection)</figcaption></figure>
                 <figure><img src="./1_extra/gate.png" alt="Prokudin-Gorskii extra - gate" /><figcaption>gate (collection)</figcaption></figure>
-                <figure><img src="./1_extra/tippy.png" alt="Prokudin-Gorskii extra - tippy" /><figcaption>tippy (collection — downloaded picture was already aligned, my algorithm found the same alignment, as no extra borders around are visible)</figcaption></figure>
+                <figure><img src="./1_extra/tippy.png" alt="Prokudin-Gorskii extra - tippie" /><figcaption>tippie (collection — downloaded picture was already aligned, my algorithm found the same alignment, as no extra borders around are visible)</figcaption></figure>
                 <figure><img src="./1_extra/water.png" alt="Prokudin-Gorskii extra - water" /><figcaption>water (collection)</figcaption></figure>
             </div>
         </section>
@@ -297,10 +303,30 @@
 
         <section class="card glass">
             <h3>Automatic cropping</h3>
-            <p><strong>Approach</strong>: Briefly describe border detection (e.g., edge/variance/consensus across channels) and crop strategy.</p>
+            <p><strong>Intuition</strong>: Real borders sit at the edges, look like long straight lines, and contain lots of extreme pixels — very bright (white) and very dark (black). In contrast, real scene content has mixed mid‑tones and broken/curvy edges; full rows or columns in the interior are rarely dominated by extremes, which makes border lines easy to spot.</p>
+            <p><strong>Method</strong>:</p>
+            <ul>
+                <li><strong>Scan full lines</strong>: For left/right, examine vertical lines (columns) spanning the full height; for top/bottom, examine horizontal lines (rows) spanning the full width.</li>
+                <li><strong>Classify pixels</strong>: Mark a pixel as black if ≤ <em>BLACK_THR</em> and white if ≥ <em>WHITE_THR</em>. Thresholds are auto‑estimated from a thin outer strip when enabled, otherwise use <em>WHITE_THR ≈ 0.85</em> and <em>BLACK_THR ≈ 0.22</em>.</li>
+                <li><strong>Score each line</strong>: Compute the fraction of pixels on that line that are extreme (black or white). If the fraction ≥ <em>70%</em>, classify that line as border.</li>
+                <li><strong>Step inward robustly</strong>: Move inward while there is <em>4‑of‑5 neighbor</em> agreement that consecutive lines are border (reduces noise/outliers).</li>
+                <li><strong>Safety cap</strong>: Never crop more than <em>45%</em> from any side, and do this per channel (B/G/R) to avoid color bias.</li>
+            </ul>
+            <p class="muted">As visible below, applying the procedure independently to each channel (B/G/R) produces consistently good crop boxes.</p>
+            <p class="muted">Limitation: in some cases, adjacent strong whites and blacks can blend (e.g., via blur/compression/downsampling) into gray along a line, weakening the extreme‑pixel signal and causing under‑detection of borders. The 4‑of‑5 neighbor voting and per‑channel processing help, but are not perfect; tightening thresholds or the extreme‑fraction can further improve those edge cases.</p>
             <div class="two-up">
-                <div class="placeholder">Before</div>
-                <div class="placeholder">After</div>
+                <figure style="flex:1 1 0; margin:0;">
+                    <img src="./2/cathedral_B.png" alt="Per-channel crop box (cathedral, B)" style="display:block;max-width:100%;height:auto;border-radius:12px; outline: 2px solid #0f172a; outline-offset: 4px;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Cathedral — B channel (red box = crop)</figcaption>
+                </figure>
+                <figure style="flex:1 1 0; margin:0;">
+                    <img src="./2/cathedral_G.png" alt="Per-channel crop box (cathedral, G)" style="display:block;max-width:100%;height:auto;border-radius:12px; outline: 2px solid #0f172a; outline-offset: 4px;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Cathedral — G channel (red box = crop)</figcaption>
+                </figure>
+                <figure style="flex:1 1 0; margin:0;">
+                    <img src="./2/cathedral_R.png" alt="Per-channel crop box (cathedral, R)" style="display:block;max-width:100%;height:auto;border-radius:12px; outline: 2px solid #0f172a; outline-offset: 4px;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Cathedral — R channel (red box = crop)</figcaption>
+                </figure>
             </div>
             
         </section>
@@ -310,13 +336,22 @@
             <h4>Motivation</h4>
             <p>Global methods (min–max scaling or vanilla histogram equalization) can either leave low‑contrast regions flat or push highlights/shadows too far. Many Prokudin‑Gorskii images have locally varying illumination; we need a method that enhances texture and structure region‑by‑region without amplifying noise or creating halos.</p>
             <h4>Approach</h4>
-            <p>Contrast Limited Adaptive Histogram Equalization (CLAHE). Intuition: global histogram equalization often overdrives highlights/shadows or misses local detail. CLAHE boosts contrast <em>locally</em> by operating on small tiles while capping how much any intensity bin can grow (the clip limit) to avoid noise blow‑ups.</p>
             <ul>
-                <li><strong>Per‑tile equalization</strong>: Divide the image into <strong>8×8</strong> tiles. For each tile: build its histogram, clip each bin at a limit <em>T</em>, redistribute the overflow evenly, compute the clipped CDF, and remap that tile’s pixels to span the range.</li>
-                <li><strong>Clip limit</strong>: <em>T</em> caps how much any intensity bin can grow, preventing noise or small peaks from dominating low‑contrast regions.</li>
-                <li><strong>Seamless blending</strong>: For every pixel, bilinearly interpolate the remapping from the four surrounding tiles so there are no borders between tiles.</li>
+                <li><strong>What it is</strong>: Contrast Limited Adaptive Histogram Equalization (CLAHE) boosts local contrast using small tiles and clipped histograms.</li>
+                <li><strong>Why histograms help</strong>: A histogram is a simple bar chart of how many pixels have each brightness (0–255). If most bars sit in a narrow range (e.g., mostly dark), the tile looks flat; spreading tones out across the range reveals hidden detail without changing the scene.</li>
+                <li><strong>Color space</strong>: Convert the image to <strong>LAB</strong> and operate on the <strong>L (luminance)</strong> channel only; <em>A/B</em> (color) channels are left unchanged and merged back after equalization to preserve hues.</li>
+                <li><strong>How it works</strong>:
+                    <ul>
+                        <li><strong>Divide into tiles</strong>: Split the image into an <strong>N×N grid</strong> (configurable; e.g., <strong>24×24</strong> here).</li>
+                        <li><strong>Build a histogram</strong>: For each tile, count pixels at each brightness (0–255). This shows how tones are distributed.</li>
+                        <li><strong>Clip tall bins</strong>: Set a per‑bin threshold as <em>T × (average count per bin)</em> (with <em>T ≈ 2.0</em>). Cap bars above this level and <em>redistribute the excess uniformly</em> to avoid over‑amplifying noise or small peaks.</li>
+                        <li><strong>Equalize via CDF</strong>: The CDF is a running total of the histogram; for any brightness <em>x</em> it tells you what fraction of pixels in this tile are ≤ <em>x</em>. We map <em>x → CDF(x)</em> (normalized to 0–1), so darkest values go near 0, brightest near 1, and crowded ranges are spread out — revealing detail and increasing local contrast.</li>
+                        <li><strong>Blend between tiles</strong>: Each tile yields its own remapping curve. For pixels near tile borders, we take the four surrounding tiles’ curves and combine them with bilinear weights based on the pixel’s relative (x,y) position (weights sum to 1). The pixel is remapped by this weighted average, which removes visible seams between tiles.</li>
+                    </ul>
+                </li>
+                <li><strong>Luminance‑only</strong>: Equalization is applied to the <strong>L</strong> channel, then converted back to BGR; this preserves color fidelity while enhancing local detail.</li>
+                <li><strong>Trade‑offs</strong>: Larger tiles → smoother, more global look; smaller tiles → stronger local contrast but risk amplifying noise if <em>T</em> is too high.</li>
             </ul>
-            <p>Effect: dark regions gain detail, bright regions recover texture, and overall contrast increases without harsh artifacts common in naive equalization.</p>
             <h4>Before &amp; After Results</h4>
             <div class="two-up">
                 <div class="compare" data-compare>
@@ -386,28 +421,43 @@
             <h4>Motivation</h4>
             <p>Channel gains and spectral responses can differ; simple per‑channel scaling (white balance) may not fully capture cross‑channel interactions. I explored small color transforms to find a mapping that looks most realistic.</p>
             <h4>Approach</h4>
-            <p>I brute‑forced a set of lightweight transforms and rendered them into a grid: per‑channel diagonal gains (±R/G/B, warm/cool/magenta) and simple cross‑channel mixes (e.g., add a small fraction of G into R). I then visually selected the most natural‑looking result from the grid.</p>
-            <p class="muted">Grid setup (examples): diagonal variants, and mixes such as R' ← R + ε·G, G' ← G + ε·B, B' ← B + ε·G with ε ≈ 0.25. Images were normalized and shown side‑by‑side for quick comparison.</p>
+            <p>I generated a small set of candidates using two tiny 3×3 matrix families — diagonal channel gains and cross‑channel mixing — then picked the most natural‑looking result.</p>
+            <ul>
+                <li><strong>Color basis (additive RGB)</strong>: Red + Green = Yellow (warm), Green + Blue = Cyan (cool), Red + Blue = Magenta. Scaling channels nudges colors along these axes.</li>
+                <li><strong>Diagonal gains (warm RG+, cool BG+, magenta RB+)</strong>: Multiply channels independently (diagonal matrix). For example:
+                    <ul>
+                        <li><em>RG+</em>: boost R and G slightly (~0.28) → warmer/yellowish look.</li>
+                        <li><em>BG+</em>: boost B and G → cooler/cyan look.</li>
+                        <li><em>RB+</em>: boost R and B → magenta tint.</li>
+                    </ul>
+                    Also include single‑channel tweaks (+R, +G, +B and their negatives) to correct specific casts.
+                </li>
+                <li><strong>Cross‑channel mixes</strong>: Add a small fraction <em>ε ≈ 0.25</em> from one channel into another (off‑diagonal entries). Example: <em>B' = (1−ε)·B + ε·G</em> shifts blue slightly toward cyan, reducing magenta casts; similarly <em>R' ← R + ε·G</em>, <em>G' ← G + ε·B</em>, etc.</li>
+                <li><strong>Baselines</strong>: Diagonal gray‑world and white‑patch gains for reference.</li>
+                <li><strong>Evaluation</strong>: Render candidates to sRGB, size‑match, and lay out in a grid to judge realism (skin tones, skies, foliage) side‑by‑side.</li>
+            </ul>
+            <p class="muted">Note: these mappings are not universal. The most natural‑looking transform is image‑dependent (scene/illuminant) and therefore relative; the grid enables per‑image selection rather than a single fixed mapping.</p>
             <h4>Chosen mapping (bottom‑right tile)</h4>
             <p>I picked the bottom‑right tile of the grid as the final mapping. This corresponds to a subtle <em>blue‑from‑green</em> mix:</p>
             <div class="formula">\[ B' = (1-\varepsilon)\,B + \varepsilon\,G, \quad G' = G, \quad R' = R, \;\; \text{with } \varepsilon \approx 0.25. \]</div>
             <p>Intuition: adding a touch of green into blue reduces residual magenta casts and improves foliage/sky balance without over‑saturating reds.</p>
-            <h4 style="margin-top:12px;">Grid and comparison (tippy)</h4>
+            <h4 style="margin-top:12px;">Grid and comparison (tippie)</h4>
             <div class="two-up">
                 <figure style="flex:1 1 0; margin:0;">
-                    <img src="./5/tippy_grid.png" alt="Color mapping variant grid for tippy" style="display:block;max-width:100%;height:auto;border-radius:12px;" />
-                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Variant grid (tippy)</figcaption>
+                    <img src="./5/tippy_grid.png" alt="Color mapping variant grid for tippie" style="display:block;max-width:100%;height:auto;border-radius:12px;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Variant grid (tippie)</figcaption>
                 </figure>
                 <div class="compare" data-compare>
-                    <img class="compare-base" src="./5/tippy_old.png" alt="Tippy before color mapping" />
+                    <img class="compare-base" src="./5/tippy_old.png" alt="Tippie before color mapping" />
                     <div class="compare-overlay" style="clip-path: inset(0 0 0 50%)">
-                        <img src="./5/tippy_new.png" alt="Tippy after chosen color mapping" />
+                        <img src="./5/tippy_new.png" alt="Tippie after chosen color mapping" />
                     </div>
                     <div class="compare-handle" style="left:50%"></div>
                     <span class="compare-label left">Original</span>
                     <span class="compare-label right">Mapped</span>
                 </div>
             </div>
+            <p class="muted" style="text-align:center;margin-top:6px;">The mapped image (right) looks more realistic and less like a warm filter is applied (as the left side feels). The sand color also appears more natural.</p>
         </section>
 
         <section class="card glass">
@@ -424,17 +474,17 @@
             <p>For each candidate shift, I evaluate <strong>equal‑weight NCC and L2</strong> on the gradient maps and pick the best shift in a coarse‑to‑fine pyramid (same window schedule as before).</p>
             <div class="two-up">
                 <figure style="flex:1 1 0;">
-                    <img src="./6_edges/church_edges_B.png" alt="Church gradient map (Blue channel)" style="display:block;max-width:320px;width:100%;height:auto;border-radius:12px;margin:0 auto;" />
+                    <img class="expandable" src="./6_edges/church_edges_B.png" alt="Church gradient map (Blue channel)" style="display:block;max-width:320px;width:100%;height:auto;border-radius:12px;margin:0 auto;" />
                     <figcaption class="muted" style="text-align:center;margin-top:6px;">Gradient map — Blue channel</figcaption>
                 </figure>
                 <figure style="flex:1 1 0;">
-                    <img src="./6_edges/church_edges_G.png" alt="Church gradient map (Green channel)" style="display:block;max-width:320px;width:100%;height:auto;border-radius:12px;margin:0 auto;" />
+                    <img class="expandable" src="./6_edges/church_edges_G.png" alt="Church gradient map (Green channel)" style="display:block;max-width:320px;width:100%;height:auto;border-radius:12px;margin:0 auto;" />
                     <figcaption class="muted" style="text-align:center;margin-top:6px;">Gradient map — Green channel</figcaption>
                 </figure>
             </div>
             <p class="muted" style="margin-top:8px;">These gradient maps are used directly for alignment: the algorithm aligns on gradients (not raw intensities) using equal‑weight NCC and L2.</p>
             <div style="display:flex;justify-content:center;margin-top:12px;">
-                <img src="./6_edges/church.png" alt="Aligned RGB result (church)" style="display:block;max-width:520px;width:100%;height:auto;border-radius:12px;" />
+                <img class="expandable" src="./6_edges/church.png" alt="Aligned RGB result (church)" style="display:block;max-width:520px;width:100%;height:auto;border-radius:12px;" />
             </div>
             <p class="muted" style="margin-top:8px;">Finding: On this dataset, gradients+NCC/L2 did <strong>not</strong> outperform the prior method in a significant way, but it was a useful experiment that confirmed alignment robustness to brightness changes.</p>
         </section>
@@ -483,7 +533,7 @@
         function open(src, alt){ lbImg.src = src; lbImg.alt = alt || 'Expanded result'; lb.classList.add('open'); lb.setAttribute('aria-hidden','false'); }
         function close(){ lb.classList.remove('open'); lb.setAttribute('aria-hidden','true'); lbImg.src = ''; }
         document.addEventListener('click', function(e){
-            var img = e.target.closest('.grid img, .two-up.hero img, .compare img');
+            var img = e.target.closest('.grid img, .two-up.hero img, .compare img, .expandable');
             if(img){ open(img.getAttribute('src'), img.getAttribute('alt')); }
         });
         closeBtn.addEventListener('click', close);

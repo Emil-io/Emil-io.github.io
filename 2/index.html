@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Project 2</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f5f7fb;
+            --text: #0f172a;
+            --muted: #475569;
+            --border: rgba(255,255,255,0.35);
+            --accent: #2563eb;
+            --glass-bg: rgba(255,255,255,0.45);
+            --glass-shadow: 0 10px 30px rgba(2,6,23,0.08);
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            margin: 0;
+            line-height: 1.65;
+            color: var(--text);
+            background: var(--bg);
+            text-align: center;
+        }
+        img { border-radius: 12px; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 32px 20px; }
+        header { margin-bottom: 20px; padding: 16px; border-radius: 16px; display: flex; align-items: center; gap: 12px; }
+        header h1 { margin: 0; font-size: 32px; }
+        header p { margin: 6px 0 0; color: var(--text); }
+        nav a { color: var(--accent); text-decoration: none; }
+        nav a:hover { text-decoration: underline; }
+        .glass {
+            position: relative;
+            border-radius: 18px;
+            border: 1px solid transparent;
+            background-image:
+                linear-gradient(135deg, rgba(255,255,255,0.55), rgba(255,255,255,0.25)),
+                linear-gradient(135deg, rgba(255,255,255,0.85), rgba(17,24,39,0.08));
+            background-origin: padding-box, border-box;
+            background-clip: padding-box, border-box;
+            box-shadow: var(--glass-shadow);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            backdrop-filter: blur(16px) saturate(180%);
+        }
+        .glass > * { position: relative; z-index: 1; }
+        .glass::before {
+            content: "";
+            position: absolute;
+            inset: 1px;
+            border-radius: inherit;
+            pointer-events: none;
+            background: radial-gradient(120% 80% at 0% 0%, rgba(255,255,255,0.65), rgba(255,255,255,0) 60%);
+            mix-blend-mode: screen;
+            z-index: 0;
+        }
+        .glass::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            pointer-events: none;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -1px 0 rgba(255,255,255,0.35), inset 0 0 40px rgba(255,255,255,0.12);
+            z-index: 0;
+        }
+        .card { padding: 20px; margin: 20px 0; text-align: left; }
+        .muted { color: var(--muted); }
+        .placeholder { height: 180px; border: 1px dashed var(--border); background: #f8fafc; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--muted); margin-top: 12px; }
+        /* Before/After Slider (ported from Project 1) */
+        .compare { position: relative; width: 100%; max-width: 900px; margin: 12px auto 0; border-radius: 12px; overflow: hidden; box-shadow: var(--glass-shadow); }
+        .compare-base, .compare-overlay img { display: block; width: 100%; height: auto; user-select: none; }
+        .compare-overlay { position: absolute; inset: 0; overflow: hidden; will-change: clip-path; }
+        .compare-handle { position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; background: rgba(255,255,255,0.9); box-shadow: 0 0 0 1px rgba(15,23,42,0.35); cursor: ew-resize; }
+        .compare-handle::before { content: ""; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 18px; height: 18px; border-radius: 50%; background: rgba(255,255,255,0.95); box-shadow: 0 1px 2px rgba(15,23,42,0.2), 0 0 0 1px rgba(15,23,42,0.25); }
+        .compare-label { position: absolute; top: 8px; padding: 4px 8px; background: rgba(15,23,42,0.6); color: #fff; border-radius: 999px; font-size: 12px; }
+        .compare-label.left { left: 8px; }
+        .compare-label.right { right: 8px; }
+        .compare::after { content: 'Click to expand'; position: absolute; right: 8px; bottom: 8px; background: rgba(15,23,42,0.7); color: #fff; padding: 4px 8px; border-radius: 999px; font-size: 12px; opacity: 0; transition: opacity 0.2s ease; pointer-events: none; }
+        .compare:hover::after { opacity: 1; }
+        /* Fixed-height variant for side-by-side consistency */
+        .compare.fixed { height: var(--ih); width: auto; max-width: 100%; display: inline-block; }
+        .compare.fixed .compare-base, .compare.fixed .compare-overlay img { height: 100%; width: auto; }
+        @media print {
+            @page { size: auto; margin: 12mm; }
+            html, body { background: #ffffff !important; color: #000000 !important; }
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .container { max-width: none; padding: 0; }
+            header.glass, .card.glass { background: #ffffff !important; background-image: none !important; border: 1px solid #cccccc !important; box-shadow: none !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+            nav a { color: #000000 !important; text-decoration: underline; }
+        }
+    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="utf-8" />
+    <meta name="description" content="Project 2 - Fun with Filters and Frequencies" />
+</head>
+<body>
+    <div class="container">
+        <header class="glass">
+            <img src="/logo.png" alt="UC Berkeley logo" style="height:64px;width:auto;" />
+            <div style="text-align:left;">
+                <h1>Programming Project #2 (proj2)</h1>
+                <p>CS180: Intro to Computer Vision and Computational Photography</p>
+                <p class="muted" style="margin-top:2px;">Due: 11:59pm on Friday, Sep 26, 2025</p>
+            </div>
+            <nav style="margin-left:auto;"><a href="/index.html">← Back to Home</a></nav>
+        </header>
+
+        <section class="card glass">
+            <h2>Fun with Filters and Frequencies</h2>
+            <p class="muted">Boxes below list each task. Fill them with your writeup and results later.</p>
+        </section>
+
+        <!-- Part 1 -->
+        <section class="card glass">
+            <h2>Part 1: Fun with Filters</h2>
+            <div class="placeholder"> </div>
+        </section>
+
+        <section class="card glass">
+            <h3>Part 1.1: Convolutions from Scratch!</h3>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;">
+                <figure style="margin:0;">
+                    <img src="/2/1/original_gray.png" alt="Original (grayscale)" style="width:100%;height:auto;border-radius:12px;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Original (grayscale)</figcaption>
+                </figure>
+                <figure style="margin:0;">
+                    <img src="/2/1/box_9.png" alt="9×9 box filter result" style="width:100%;height:auto;border-radius:12px;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">9×9 box filter</figcaption>
+                </figure>
+                <figure style="margin:0;">
+                    <img src="/2/1/dx_4loops.png" alt="Dx (4-loop convolution)" style="width:100%;height:auto;border-radius:12px;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Dx (4-loop convolution)</figcaption>
+                </figure>
+                <figure style="margin:0;">
+                    <img src="/2/1/dy_4loops.png" alt="Dy (4-loop convolution)" style="width:100%;height:auto;border-radius:12px;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Dy (4-loop convolution)</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="card glass">
+            <h3>Part 1.2: Finite Difference Operator</h3>
+            <div style="--ih:220px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;">
+                <figure style="margin:0;">
+                    <img src="/2/1_2/original_gray.png" alt="Original (grayscale)" style="width:100%;height:var(--ih);object-fit:contain;border-radius:12px;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Original (grayscale)</figcaption>
+                </figure>
+                <figure style="margin:0;">
+                    <img src="/2/1_2/grad_x.png" alt="Partial derivative in x (D_x)" style="width:100%;height:var(--ih);object-fit:contain;border-radius:12px;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">D_x</figcaption>
+                </figure>
+                <figure style="margin:0;">
+                    <img src="/2/1_2/grad_y.png" alt="Partial derivative in y (D_y)" style="width:100%;height:var(--ih);object-fit:contain;border-radius:12px;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">D_y</figcaption>
+                </figure>
+                <figure style="margin:0;">
+                    <img src="/2/1_2/grad_mag.png" alt="Gradient magnitude image" style="width:100%;height:var(--ih);object-fit:contain;border-radius:12px;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Gradient magnitude</figcaption>
+                </figure>
+                <figure style="margin:0;">
+                    <img src="/2/1_2/edges_thr_0.20.png" alt="Binarized edges (threshold 0.20)" style="width:100%;height:var(--ih);object-fit:contain;border-radius:12px;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Edges (thr = 0.20)</figcaption>
+                </figure>
+                <figure style="margin:0;grid-column:1 / -1;">
+                    <img src="/2/1_2/edges_strip_0.1_to_0.9.png" alt="Threshold sweep 0.1 → 0.9" style="width:100%;height:var(--ih);object-fit:contain;border-radius:12px;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Threshold sweep (0.1 → 0.9)</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="card glass">
+            <h3>Part 1.3: Derivative of Gaussian (DoG) Filter</h3>
+            <div style="--ih:220px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;">
+                <figure style="margin:0;">
+                    <img src="/2/1_3/filters/DoGx_filter.png" alt="DoG x filter" style="width:100%;height:var(--ih);object-fit:contain;border-radius:12px;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">DoG_x filter</figcaption>
+                </figure>
+                <figure style="margin:0;">
+                    <img src="/2/1_3/filters/DoGy_filter.png" alt="DoG y filter" style="width:100%;height:var(--ih);object-fit:contain;border-radius:12px;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">DoG_y filter</figcaption>
+                </figure>
+            </div>
+
+            <div style="margin-top:16px;">
+                <h4 style="margin:8px 0;">Compare: Gradient magnitude (DoG) vs Finite Difference</h4>
+                <div style="text-align:center;">
+                    <div class="compare fixed" data-compare style="--ih:220px;">
+                        <img class="compare-base" src="/2/1_2/grad_mag.png" alt="Gradient magnitude (finite difference)" />
+                        <div class="compare-overlay" style="clip-path: inset(0 0 0 50%)">
+                            <img src="/2/1_3/grad_mag_dog.png" alt="Gradient magnitude (DoG)" />
+                        </div>
+                        <div class="compare-handle" style="left:50%"></div>
+                        <span class="compare-label left">Finite diff (1.2)</span>
+                        <span class="compare-label right">DoG (1.3)</span>
+                    </div>
+                </div>
+                <p class="muted" style="margin-top:6px;">Drag to compare DoG-based gradients (1.3) with finite-difference gradients (1.2).</p>
+            </div>
+        </section>
+
+        <section class="card glass">
+            <h3>Part 1 — Bells &amp; Whistles: Gradient Orientations (HSV)</h3>
+            <div class="placeholder"> </div>
+        </section>
+
+        <!-- Part 2 -->
+        <section class="card glass">
+            <h2>Part 2: Fun with Frequencies</h2>
+            <div class="placeholder"> </div>
+        </section>
+
+        <section class="card glass">
+            <h3>Part 2.1: Image "Sharpening" (Unsharp Mask)</h3>
+            <div class="placeholder"> </div>
+        </section>
+
+        <section class="card glass">
+            <h3>Part 2.2: Hybrid Images</h3>
+            <p class="muted" style="margin-top:0;">Inputs I chose for the hybrid: Jannik Sinner and me.</p>
+            <div style="--ih:220px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;">
+                <figure style="margin:0;">
+                    <img src="/2/2_2/2_sinner.jpeg" alt="Jannik Sinner (source image)" style="width:100%;height:var(--ih);object-fit:contain;border-radius:12px;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Jannik Sinner — source</figcaption>
+                </figure>
+                <figure style="margin:0;">
+                    <img src="/2/2_2/1_me.jpeg" alt="Me (source image)" style="width:100%;height:var(--ih);object-fit:contain;border-radius:12px;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Me — source</figcaption>
+                </figure>
+            </div>
+
+            <div style="margin-top:16px;">
+                <div style="--ih:300px;display:grid;grid-template-columns:repeat(2,minmax(240px,1fr));gap:10px;align-items:start;">
+                    <figure style="margin:0;">
+                        <img src="/2/2_2/looks_like_sinner.png" alt="Hybrid image that looks like Jannik Sinner up close" style="width:100%;height:var(--ih);object-fit:contain;border-radius:12px;" />
+                        <figcaption class="muted" style="text-align:center;margin-top:6px;">Everybody thinks Jannik Sinner is a good tennis player.</figcaption>
+                    </figure>
+                    <figure style="margin:0;">
+                        <img src="/2/2_2/actually_me.jpg" alt="Actual player: me playing on the court" style="width:100%;height:var(--ih);object-fit:contain;border-radius:12px;" />
+                        <figcaption class="muted" style="text-align:center;margin-top:6px;">But actually it's me playing on the court!</figcaption>
+                    </figure>
+                </div>
+            </div>
+        </section>
+
+        <section class="card glass">
+            <h3>Part 2.2 — Bells &amp; Whistles: Color in Hybrid Images</h3>
+            <div class="placeholder"> </div>
+        </section>
+
+        <section class="card glass">
+            <h3>Part 2.3: Gaussian and Laplacian Stacks</h3>
+            <div class="placeholder"> </div>
+        </section>
+
+        <section class="card glass">
+            <h3>Part 2.4: Multiresolution Blending (Oraple)</h3>
+            <p class="muted" style="margin-top:0;">Inputs (masked preview), final blend, and reconstruction grid.</p>
+            <div style="--ih:300px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;align-items:start;">
+                <figure style="margin:0;">
+                    <img src="/2/2_4/A_masked_plus_B_masked.png" alt="Inputs masked together (preview)" style="width:100%;height:var(--ih);object-fit:contain;border-radius:12px;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Inputs masked together (preview)</figcaption>
+                </figure>
+                <figure style="margin:0;">
+                    <img src="/2/2_4/blended.png" alt="Final blended result" style="width:100%;height:var(--ih);object-fit:contain;border-radius:12px;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Final blended result</figcaption>
+                </figure>
+                <figure style="margin:0;grid-column:1 / -1;">
+                    <img src="/2/2_4/grid_reconstruction.png" alt="Reconstruction grid (Gaussian/Laplacian stacks)" style="width:100%;height:auto;object-fit:contain;border-radius:12px;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Reconstruction grid</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="card glass">
+            <h3>Part 2.4 — Bells &amp; Whistles: Color in Blending</h3>
+            <div class="placeholder"> </div>
+        </section>
+
+        <section class="card glass">
+            <h2>Deliverables Checklist</h2>
+            <div class="placeholder"> </div>
+        </section>
+
+        <section class="card glass">
+            <h2>Most Important Thing I Learned</h2>
+            <div class="placeholder"> </div>
+        </section>
+
+    </div>
+    <script>
+    (function(){
+        function init(el){
+            var overlay = el.querySelector('.compare-overlay');
+            var handle = el.querySelector('.compare-handle');
+            if(!overlay || !handle) return;
+            var dragging = false;
+            function setX(clientX){
+                var r = el.getBoundingClientRect();
+                var pct = (clientX - r.left) / r.width;
+                if (pct < 0) pct = 0; if (pct > 1) pct = 1;
+                var perc = (pct*100).toFixed(2) + '%';
+                overlay.style.clipPath = 'inset(0 0 0 calc(' + perc + '))';
+                handle.style.left = perc;
+            }
+            function onDown(e){ dragging = true; e.preventDefault(); }
+            function onMove(e){ if(!dragging) return; setX(e.clientX || (e.touches && e.touches[0].clientX)); }
+            function onUp(){ dragging = false; }
+            handle.addEventListener('mousedown', onDown);
+            window.addEventListener('mousemove', onMove);
+            window.addEventListener('mouseup', onUp);
+            handle.addEventListener('touchstart', onDown, {passive:false});
+            window.addEventListener('touchmove', onMove, {passive:false});
+            window.addEventListener('touchend', onUp);
+            el.addEventListener('click', function(e){ setX(e.clientX); });
+        }
+        document.querySelectorAll('[data-compare]').forEach(init);
+    })();
+    </script>
+</body>
+</html>
+

@@ -152,15 +152,16 @@
                 <img src="/2/1/2_for_loops.png" alt="Part 1.1 — 2-for-loops convolution implementation (code snippet)" style="width:100%;max-width:780px;height:auto;display:block;margin:0 auto;" />
             </figure>
             <p class="muted" style="margin-top:6px;">No worries, I use dark mode; I only switched to white for the screenshot so it better fits the website.</p>
+            <p class="muted" style="margin:6px 0 0;">Boundary handling: I pad with <strong>zeros</strong> (fill missing pixels with 0). There are multiple valid approaches (as presented in lecture); I chose zero‑padding.</p>
             <h4 style="margin:12px 0 6px;">Runtime vs scipy.signal.convolve2d</h4>
             <ul style="margin:0 0 6px 18px;">
-                <li><strong>Box</strong>: ours 2808.88 ms vs scipy 108.86 ms</li>
-                <li><strong>Dx</strong>: ours 2440.96 ms vs scipy 11.06 ms</li>
-                <li><strong>Dy</strong>: ours 2666.32 ms vs scipy 14.91 ms</li>
+                <li><strong>Box</strong>: mine 2808.88 ms vs scipy 108.86 ms</li>
+                <li><strong>Dx</strong>: mine 2440.96 ms vs scipy 11.06 ms</li>
+                <li><strong>Dy</strong>: mine 2666.32 ms vs scipy 14.91 ms</li>
             </ul>
             <p class="muted" style="margin:0 0 6px;">
                 On a <strong>960×1280</strong> image, <code>scipy.signal.convolve2d</code> is <strong>way faster</strong> than the
-                pure‑NumPy implementation (highly optimized C/Fortran under the hood).
+                pure‑NumPy implementation (I assume highly optimized C under the hood).
             </p>
             <p class="muted" style="margin:0;">To verify correctness, I also rendered a <em>difference image</em> between my output and scipy’s; it was essentially pure black, indicating the results match numerically.</p>
         </section>
@@ -430,6 +431,13 @@
                 <img src="/2/2_2/hybrid.png" alt="Hybrid result (man + cat)" style="display:block;margin:0 auto;width:100%;max-width:280px;height:auto;" />
                 <figcaption class="muted" style="text-align:center;margin-top:6px;">Hybrid (man ⊕ cat)</figcaption>
             </figure>
+            <p class="muted" style="margin:6px 0 10px;">
+                Cutoff selection: I chose the low‑/high‑pass <strong>σ</strong> values iteratively by qualitative assessment at
+                near vs far viewing distances. If, <em>up close</em>, the low‑pass subject was still too visible, I increased the
+                low‑pass σ to further blur it. If, <em>from far away</em>, the high‑pass subject dominated, I decreased the
+                high‑pass σ so only higher frequencies remained. I repeated this simple adjust‑and‑look loop until the
+                transition felt natural both near and far.
+            </p>
 
             <h4 style="margin:16px 0 8px;">Example 2 — Sinner hybrid</h4>
             <p class="muted" style="margin-top:0;">Inputs I chose for this example: Jannik Sinner and me.</p>
@@ -525,21 +533,15 @@
                     <figcaption class="muted" style="text-align:center;margin-top:6px;">High-pass in grayscale</figcaption>
                 </figure>
             </div>
-            <p class="muted" style="margin:8px 0 6px;">
-                I tried all four combinations of color vs grayscale for the hybrid. A clear trend
-                emerges: <strong>high frequencies carry little perceived color</strong>. Fine details (whiskers, pores,
-                hair) occupy small areas and are dominated by luminance contrast, while chroma signals in both
-                cameras and human vision are effectively <em>lower‑pass</em> and lower resolution. You can still spot
-                color in the high‑pass layer—look closely at the cat’s eyes—but it is much subtler than the
-                corresponding luminance edges.
-            </p>
             <p class="muted" style="margin:0 0 6px;">
-                When the <strong>low‑pass is color</strong> and the <strong>high‑pass is grayscale</strong>, the colored low‑frequency
-                face tends to dominate perception; the grayscale detail rides along but is harder to parse because
-                our attention is drawn to the large, colorful regions. In the opposite setting—<strong>high‑pass in color</strong>
-                and <strong>low‑pass in grayscale</strong>—the effect works best for me: up close, the colored high‑frequency
-                features from the cat pop and make that subject more present; as you step back, those fine colored
-                details fade away with distance, and you cleanly perceive the grayscale low‑pass portrait.
+                The <strong>high‑pass</strong> images do show color, but it does not dominate as much—the color mostly lives in
+                fine details and small regions. By contrast, <strong>low‑frequency</strong> content tends to dominate perceived color
+                because it captures larger shapes and thus fills broader areas with that color. When the <strong>low‑pass is color</strong>
+                and the <strong>high‑pass is grayscale</strong>, the colored low‑frequency face tends to dominate perception; the grayscale
+                detail rides along but is harder to parse because our attention is drawn to the large, colorful regions. In the
+                opposite setting—<strong>high‑pass in color</strong> and <strong>low‑pass in grayscale</strong>—the effect works best for me: up close,
+                the colored high‑frequency features from the cat pop and make that subject more present; as you step back, those fine
+                colored details fade away with distance, and you cleanly perceive the grayscale low‑pass portrait.
             </p>
         </section>
 
@@ -579,6 +581,10 @@
                 <figure style="margin:0;grid-column:1 / -1;">
                     <img src="/2/2_3/grid_laplacian_masked_B.png" alt="Masked Laplacian pyramid of B" style="width:100%;height:auto;object-fit:contain;" />
                     <figcaption class="muted" style="text-align:center;margin-top:6px;">Masked Laplacian pyramid (B)</figcaption>
+                </figure>
+                <figure style="margin:0;grid-column:1 / -1;">
+                    <img src="/2/2_3/grid_mask_gaussian.png" alt="Gaussian pyramid of mask" style="width:100%;height:auto;object-fit:contain;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Gaussian pyramid (mask)</figcaption>
                 </figure>
                 <figure style="margin:0;grid-column:1 / -1;">
                     <img src="/2/2_3/grid_laplacian_blend.png" alt="Blended Laplacian pyramid" style="width:100%;height:auto;object-fit:contain;" />
@@ -691,13 +697,13 @@
             </p>
             <div style="margin:0 auto;max-width:800px;">
                 <div class="compare fixed" data-compare style="--ih:260px;max-width:800px;">
-                    <img class="compare-base" src="/2/2_4/bells/no_srgb.png" alt="No sRGB" />
+                    <img class="compare-base" src="/2/2_4/bells/old.png" alt="No sRGB" />
                     <div class="compare-overlay" style="clip-path: inset(0 0 0 50%)">
-                        <img src="/2/2_4/bells/with_srgb.png" alt="With sRGB" />
+                        <img src="/2/2_4/bells/new.png" alt="With sRGB" />
                     </div>
                     <div class="compare-handle" style="left:50%"></div>
-                    <span class="compare-label left">No sRGB</span>
-                    <span class="compare-label right">With sRGB</span>
+                    <span class="compare-label left">Old</span>
+                    <span class="compare-label right">New</span>
                 </div>
             </div>
         </section>
@@ -720,7 +726,9 @@
                 different viewing distances, and multiresolution blending shows how <em>scale‑aware
                 masks</em> control what survives across levels. I wasn’t fully aware before this project
                 how strongly frequency content—and the fact that some bands can be effectively invisible
-                to humans at certain distances—controls what we actually see.
+                to humans at certain distances—controls what we actually see. Coming from a
+                <strong>machine learning</strong> background, I wasn’t aware that this kind of image manipulation is
+                possible with such comparatively simple, classical signal‑processing techniques.
             </p>
         </section>
 

@@ -23,7 +23,6 @@
             background: var(--bg);
             text-align: center;
         }
-        img { border-radius: 12px; }
         .container { max-width: 1200px; margin: 0 auto; padding: 32px 20px; }
         header { margin-bottom: 20px; padding: 16px; border-radius: 16px; display: flex; align-items: center; gap: 12px; }
         header h1 { margin: 0; font-size: 32px; }
@@ -67,7 +66,7 @@
         .muted { color: var(--muted); }
         .placeholder { height: 180px; border: 1px dashed var(--border); background: #f8fafc; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--muted); margin-top: 12px; }
         /* Before/After Slider (ported from Project 1) */
-        .compare { position: relative; width: 100%; max-width: 900px; margin: 12px auto 0; border-radius: 12px; overflow: hidden; box-shadow: var(--glass-shadow); }
+        .compare { position: relative; width: 100%; max-width: 900px; margin: 12px auto 0; overflow: hidden; box-shadow: var(--glass-shadow); }
         .compare-base, .compare-overlay img { display: block; width: 100%; height: auto; user-select: none; }
         .compare-overlay { position: absolute; inset: 0; overflow: hidden; will-change: clip-path; }
         .compare-handle { position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; background: rgba(255,255,255,0.9); box-shadow: 0 0 0 1px rgba(15,23,42,0.35); cursor: ew-resize; }
@@ -78,8 +77,20 @@
         .compare::after { content: 'Click to expand'; position: absolute; right: 8px; bottom: 8px; background: rgba(15,23,42,0.7); color: #fff; padding: 4px 8px; border-radius: 999px; font-size: 12px; opacity: 0; transition: opacity 0.2s ease; pointer-events: none; }
         .compare:hover::after { opacity: 1; }
         /* Fixed-height variant for side-by-side consistency */
-        .compare.fixed { height: var(--ih); width: auto; max-width: 100%; display: inline-block; }
-        .compare.fixed .compare-base, .compare.fixed .compare-overlay img { height: 100%; width: auto; }
+        .compare.fixed { height: auto; width: 100%; max-width: 100%; display: inline-block; }
+        .compare.fixed .compare-base, .compare.fixed .compare-overlay img { height: auto; width: 100%; object-fit: contain; }
+        /* Ensure image centers align horizontally in rows */
+        .fig-fixed { display: grid; grid-template-rows: auto auto; height: auto; align-items: start; }
+        .fig-fixed img { height: auto !important; width: auto; max-width: 100%; object-fit: contain; }
+        .hsv-wrap { position: relative; display: inline-block; border-radius: 12px; overflow: hidden; }
+        .hsv-img { display: block; max-width: 100%; height: auto; }
+        .hsv-compass { position: absolute; top: 8px; right: 8px; width: 72px; height: 72px; background: rgba(255,255,255,0.85); padding: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-radius: 6px; }
+        /* Global rounded corners for all images */
+        img { border-radius: 12px; }
+        /* Ensure the before/after slider clips to rounded corners */
+        .compare { border-radius: 12px; }
+        /* Override inline fixed heights used for grid alignment */
+        img[style*="height:var(--ih)"] { height: auto !important; }
         @media print {
             @page { size: auto; margin: 12mm; }
             html, body { background: #ffffff !important; color: #000000 !important; }
@@ -92,6 +103,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta charset="utf-8" />
     <meta name="description" content="Project 2 - Fun with Filters and Frequencies" />
+        <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
 </head>
 <body>
     <div class="container">
@@ -105,86 +117,133 @@
             <nav style="margin-left:auto;"><a href="/index.html">← Back to Home</a></nav>
         </header>
 
-        <section class="card glass">
-            <h2>Fun with Filters and Frequencies</h2>
-            <p class="muted">Boxes below list each task. Fill them with your writeup and results later.</p>
-        </section>
+        
 
         <!-- Part 1 -->
-        <section class="card glass">
-            <h2>Part 1: Fun with Filters</h2>
-            <div class="placeholder"> </div>
-        </section>
+        
 
         <section class="card glass">
             <h3>Part 1.1: Convolutions from Scratch!</h3>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;">
                 <figure style="margin:0;">
-                    <img src="/2/1/original_gray.png" alt="Original (grayscale)" style="width:100%;height:auto;border-radius:12px;" />
+                    <img src="/2/1/original_gray.png" alt="Original (grayscale)" style="width:100%;height:auto;" />
                     <figcaption class="muted" style="text-align:center;margin-top:6px;">Original (grayscale)</figcaption>
                 </figure>
                 <figure style="margin:0;">
-                    <img src="/2/1/box_9.png" alt="9×9 box filter result" style="width:100%;height:auto;border-radius:12px;" />
+                    <img src="/2/1/box_9.png" alt="9×9 box filter result" style="width:100%;height:auto;" />
                     <figcaption class="muted" style="text-align:center;margin-top:6px;">9×9 box filter</figcaption>
                 </figure>
                 <figure style="margin:0;">
-                    <img src="/2/1/dx_4loops.png" alt="Dx (4-loop convolution)" style="width:100%;height:auto;border-radius:12px;" />
+                    <img src="/2/1/dx_4loops.png" alt="Dx (4-loop convolution)" style="width:100%;height:auto;" />
                     <figcaption class="muted" style="text-align:center;margin-top:6px;">Dx (4-loop convolution)</figcaption>
                 </figure>
                 <figure style="margin:0;">
-                    <img src="/2/1/dy_4loops.png" alt="Dy (4-loop convolution)" style="width:100%;height:auto;border-radius:12px;" />
+                    <img src="/2/1/dy_4loops.png" alt="Dy (4-loop convolution)" style="width:100%;height:auto;" />
                     <figcaption class="muted" style="text-align:center;margin-top:6px;">Dy (4-loop convolution)</figcaption>
                 </figure>
             </div>
+            <h4 style="margin:12px 0 6px;">Implementation</h4>
+            <figure style="margin:0 0 10px;">
+                <div class="muted" style="text-align:center;margin:0 0 6px;">Implementation — 4 for‑loops convolution</div>
+                <img src="/2/1/4_for_loops.png" alt="Part 1.1 — 4-for-loops convolution implementation (code snippet)" style="width:100%;max-width:780px;height:auto;display:block;margin:0 auto;" />
+            </figure>
+            <figure style="margin:0;">
+                <div class="muted" style="text-align:center;margin:0 0 6px;">Implementation — 2 for‑loops (same logic; only loop structure changed)</div>
+                <img src="/2/1/2_for_loops.png" alt="Part 1.1 — 2-for-loops convolution implementation (code snippet)" style="width:100%;max-width:780px;height:auto;display:block;margin:0 auto;" />
+            </figure>
+            <p class="muted" style="margin-top:6px;">No worries, I use dark mode; I only switched to white for the screenshot so it better fits the website.</p>
+            <h4 style="margin:12px 0 6px;">Runtime vs scipy.signal.convolve2d</h4>
+            <ul style="margin:0 0 6px 18px;">
+                <li><strong>Box</strong>: ours 2808.88 ms vs scipy 108.86 ms</li>
+                <li><strong>Dx</strong>: ours 2440.96 ms vs scipy 11.06 ms</li>
+                <li><strong>Dy</strong>: ours 2666.32 ms vs scipy 14.91 ms</li>
+            </ul>
+            <p class="muted" style="margin:0 0 6px;">
+                On a <strong>960×1280</strong> image, <code>scipy.signal.convolve2d</code> is <strong>way faster</strong> than the
+                pure‑NumPy implementation (highly optimized C/Fortran under the hood).
+            </p>
+            <p class="muted" style="margin:0;">To verify correctness, I also rendered a <em>difference image</em> between my output and scipy’s; it was essentially pure black, indicating the results match numerically.</p>
         </section>
 
         <section class="card glass">
             <h3>Part 1.2: Finite Difference Operator</h3>
-            <div style="--ih:220px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;">
-                <figure style="margin:0;">
-                    <img src="/2/1_2/original_gray.png" alt="Original (grayscale)" style="width:100%;height:var(--ih);object-fit:contain;border-radius:12px;" />
+            <!-- Original grayscale at top -->
+            <figure style="margin:0 0 12px;">
+                <img src="/2/1_2/original_gray.png" alt="Original (grayscale)" style="width:100%;max-width:300px;height:auto;display:block;margin:0 auto;" />
                     <figcaption class="muted" style="text-align:center;margin-top:6px;">Original (grayscale)</figcaption>
                 </figure>
+
+            <!-- Derivatives row -->
+            <div style="--ih:220px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px;">
                 <figure style="margin:0;">
-                    <img src="/2/1_2/grad_x.png" alt="Partial derivative in x (D_x)" style="width:100%;height:var(--ih);object-fit:contain;border-radius:12px;" />
+                    <img src="/2/1_2/grad_x.png" alt="Partial derivative in x (D_x)" style="width:100%;height:var(--ih);object-fit:contain;" />
                     <figcaption class="muted" style="text-align:center;margin-top:6px;">D_x</figcaption>
                 </figure>
                 <figure style="margin:0;">
-                    <img src="/2/1_2/grad_y.png" alt="Partial derivative in y (D_y)" style="width:100%;height:var(--ih);object-fit:contain;border-radius:12px;" />
+                    <img src="/2/1_2/grad_y.png" alt="Partial derivative in y (D_y)" style="width:100%;height:var(--ih);object-fit:contain;" />
                     <figcaption class="muted" style="text-align:center;margin-top:6px;">D_y</figcaption>
                 </figure>
                 <figure style="margin:0;">
-                    <img src="/2/1_2/grad_mag.png" alt="Gradient magnitude image" style="width:100%;height:var(--ih);object-fit:contain;border-radius:12px;" />
+                    <img src="/2/1_2/grad_mag.png" alt="Gradient magnitude image" style="width:100%;height:var(--ih);object-fit:contain;" />
                     <figcaption class="muted" style="text-align:center;margin-top:6px;">Gradient magnitude</figcaption>
                 </figure>
-                <figure style="margin:0;">
-                    <img src="/2/1_2/edges_thr_0.20.png" alt="Binarized edges (threshold 0.20)" style="width:100%;height:var(--ih);object-fit:contain;border-radius:12px;" />
-                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Edges (thr = 0.20)</figcaption>
-                </figure>
-                <figure style="margin:0;grid-column:1 / -1;">
-                    <img src="/2/1_2/edges_strip_0.1_to_0.9.png" alt="Threshold sweep 0.1 → 0.9" style="width:100%;height:var(--ih);object-fit:contain;border-radius:12px;" />
-                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Threshold sweep (0.1 → 0.9)</figcaption>
-                </figure>
             </div>
+
+            <!-- Threshold sweep -->
+            <figure style="margin:0 0 12px;">
+                <img src="/2/1_2/edges_strip_0.10_to_0.50_step_0.05.png" alt="Threshold sweep 0.10 → 0.50 (step 0.05)" style="width:100%;height:var(--ih);object-fit:contain;" />
+                <figcaption class="muted" style="text-align:center;margin-top:6px;">Threshold sweep (0.10 → 0.50, step 0.05)</figcaption>
+            </figure>
+
+            <!-- Single threshold result -->
+                <figure style="margin:0;">
+                <img src="/2/1_2/edges_thr_0.15.png" alt="Binarized edges (threshold 0.15)" style="width:100%;max-width:300px;height:auto;display:block;margin:0 auto;" />
+                <figcaption class="muted" style="text-align:center;margin-top:6px;">Edges (thr = 0.15)</figcaption>
+                </figure>
+            <p class="muted" style="margin:8px 0 0;">
+                I chose a threshold of <strong>0.15</strong> to balance edge recall and noise. In the sweep above, thresholds 
+                at or below 0.15 keep the salient structures fully connected (e.g., the cameraman’s legs and the tripod 
+                edges). At <strong>0.20</strong>, those lines already begin to break, indicating important edges are being cut off. Lowering the 
+                threshold further increases spurious responses in flat regions. Thus <strong>0.15</strong> is the smallest value that still preserves 
+                the silhouette of the cameraman and the camera while avoiding excessive background noise.
+            </p>
         </section>
 
         <section class="card glass">
             <h3>Part 1.3: Derivative of Gaussian (DoG) Filter</h3>
-            <div style="--ih:220px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;">
+            <div style="--ih:150px;display:grid;grid-template-columns:auto 24px 1fr;gap:10px;margin-bottom:10px;max-width:700px;margin-left:auto;margin-right:auto;align-items:center;">
                 <figure style="margin:0;">
-                    <img src="/2/1_3/filters/DoGx_filter.png" alt="DoG x filter" style="width:100%;height:var(--ih);object-fit:contain;border-radius:12px;" />
+                    <img src="/2/1_3/filters/gaussian_9_sigma2.png" alt="Gaussian kernel (9x9, σ=2)" style="width:calc(var(--ih)*0.75);height:calc(var(--ih)*0.75);object-fit:contain;display:block;margin:0 auto;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Gaussian filter (9×9, σ=2)</figcaption>
+                </figure>
+                <div aria-hidden="true" style="font-size:22px;color:var(--text);text-align:center;">→</div>
+                <figure style="margin:0;">
+                    <img src="/2/1_3/blurred.png" alt="Gaussian blurred image" style="width:100%;height:var(--ih);object-fit:contain;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Gaussian blurred</figcaption>
+                </figure>
+            </div>
+            <p class="muted" style="margin:6px 0 10px; text-align:center;">To blur the image, I used a Gaussian with a 9×9 kernel (odd size) and standard deviation σ = 2.</p>
+            <div style="--ih:150px;display:grid;grid-template-columns:auto 24px auto 24px 1fr;gap:10px;max-width:900px;margin-left:auto;margin-right:auto;align-items:center;">
+                <figure style="margin:0;">
+                    <img src="/2/1_3/filters/DoGx_filter.png" alt="DoG x filter" style="width:var(--ih);height:var(--ih);object-fit:contain;display:block;margin:0 auto;" />
                     <figcaption class="muted" style="text-align:center;margin-top:6px;">DoG_x filter</figcaption>
                 </figure>
+                <div aria-hidden="true" style="font-size:22px;color:var(--text);text-align:center;">&amp;</div>
                 <figure style="margin:0;">
-                    <img src="/2/1_3/filters/DoGy_filter.png" alt="DoG y filter" style="width:100%;height:var(--ih);object-fit:contain;border-radius:12px;" />
+                    <img src="/2/1_3/filters/DoGy_filter.png" alt="DoG y filter" style="width:var(--ih);height:var(--ih);object-fit:contain;display:block;margin:0 auto;" />
                     <figcaption class="muted" style="text-align:center;margin-top:6px;">DoG_y filter</figcaption>
+                </figure>
+                <div aria-hidden="true" style="font-size:22px;color:var(--text);text-align:center;">=</div>
+                <figure style="margin:0;">
+                    <img src="/2/1_3/grad_mag_dog.png" alt="Gradient magnitude (DoG)" style="width:100%;height:var(--ih);object-fit:contain;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Gradient magnitude (DoG)</figcaption>
                 </figure>
             </div>
 
             <div style="margin-top:16px;">
                 <h4 style="margin:8px 0;">Compare: Gradient magnitude (DoG) vs Finite Difference</h4>
                 <div style="text-align:center;">
-                    <div class="compare fixed" data-compare style="--ih:220px;">
+                    <div class="compare fixed" data-compare style="--ih:140px;max-width:400px;">
                         <img class="compare-base" src="/2/1_2/grad_mag.png" alt="Gradient magnitude (finite difference)" />
                         <div class="compare-overlay" style="clip-path: inset(0 0 0 50%)">
                             <img src="/2/1_3/grad_mag_dog.png" alt="Gradient magnitude (DoG)" />
@@ -195,95 +254,474 @@
                     </div>
                 </div>
                 <p class="muted" style="margin-top:6px;">Drag to compare DoG-based gradients (1.3) with finite-difference gradients (1.2).</p>
+                <p class="muted" style="margin-top:6px;">
+                    Comparison: With Gaussian smoothing + DoG, edges become <strong>thicker</strong> and often more
+                    <strong>visually prominent</strong> than with raw finite differences. Very thin, noisy edge fragments
+                    are reduced; broader but low-contrast boundaries (e.g., the <em>crease in the cameraman’s pants</em>)
+                    show up more clearly and continuously. In textured areas such as the grass at the bottom, the
+                    smoothing tends to <strong>blur away fine noise</strong>, keeping the salient structures while suppressing
+                    clutter.
+                </p>
             </div>
+            
         </section>
 
         <section class="card glass">
             <h3>Part 1 — Bells &amp; Whistles: Gradient Orientations (HSV)</h3>
-            <div class="placeholder"> </div>
-        </section>
-
-        <!-- Part 2 -->
-        <section class="card glass">
-            <h2>Part 2: Fun with Frequencies</h2>
-            <div class="placeholder"> </div>
-        </section>
-
-        <section class="card glass">
-            <h3>Part 2.1: Image "Sharpening" (Unsharp Mask)</h3>
-            <div class="placeholder"> </div>
-        </section>
-
-        <section class="card glass">
-            <h3>Part 2.2: Hybrid Images</h3>
-            <p class="muted" style="margin-top:0;">Inputs I chose for the hybrid: Jannik Sinner and me.</p>
-            <div style="--ih:220px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;">
-                <figure style="margin:0;">
-                    <img src="/2/2_2/2_sinner.jpeg" alt="Jannik Sinner (source image)" style="width:100%;height:var(--ih);object-fit:contain;border-radius:12px;" />
-                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Jannik Sinner — source</figcaption>
-                </figure>
-                <figure style="margin:0;">
-                    <img src="/2/2_2/1_me.jpeg" alt="Me (source image)" style="width:100%;height:var(--ih);object-fit:contain;border-radius:12px;" />
-                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Me — source</figcaption>
-                </figure>
-            </div>
-
-            <div style="margin-top:16px;">
-                <div style="--ih:300px;display:grid;grid-template-columns:repeat(2,minmax(240px,1fr));gap:10px;align-items:start;">
-                    <figure style="margin:0;">
-                        <img src="/2/2_2/looks_like_sinner.png" alt="Hybrid image that looks like Jannik Sinner up close" style="width:100%;height:var(--ih);object-fit:contain;border-radius:12px;" />
-                        <figcaption class="muted" style="text-align:center;margin-top:6px;">Everybody thinks Jannik Sinner is a good tennis player.</figcaption>
+            <p class="muted" style="margin-top:0;">
+                Bells &amp; Whistles: I compute and visualize <strong>gradient orientations</strong> on the cameraman image using
+                only basic filtering and trigonometry (no high‑level feature/edge libraries). The pipeline:
+            </p>
+            <ul style="margin:6px 0 10px 18px;">
+                <li><strong>Gradients</strong>: Convolve with finite‑difference filters <code>[1,0,-1]</code> and its transpose to get <em>Gx</em>, <em>Gy</em>.</li>
+                <li><strong>Orientation</strong>: Map angle <code>θ = arctan2(Gy, Gx)</code> from \([-π, π]\) to hue in \([0,1]\) via <code>(θ+π)/(2π)</code>.</li>
+                <li><strong>Brightness</strong>: Use a normalized gradient magnitude as the HSV <em>value</em> so strong edges appear brighter.</li>
+                <li><strong>Legend</strong>: Render a color compass (hue→direction with crosshairs) to interpret the colors.</li>
+            </ul>
+            <p class="muted" style="margin:0 0 10px;">
+                This representation is useful because <strong>direction</strong> (hue) and <strong>strength</strong> (value) are shown jointly: thin/noisy
+                responses stay dim while real edges stand out in both color and brightness.
+            </p>
+            <div style="margin:0 auto;max-width:1100px;">
+                <div style="--ih:420px;display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:center;">
+                    <figure style="margin:0;position:relative;text-align:center;">
+                        <span class="hsv-wrap" style="height:var(--ih);">
+                            <img class="hsv-img" src="/2/1_4/cameraman_hsv.png" alt="Cameraman gradient orientations in HSV" style="max-height:100%;width:auto;display:block;" />
+                            <img class="hsv-compass" src="/2/1_4/orientation_compass.png" alt="HSV color mapping for orientations" />
+                        </span>
+                        <figcaption class="muted" style="text-align:center;margin-top:6px;">Cameraman gradient orientations (HSV)</figcaption>
                     </figure>
-                    <figure style="margin:0;">
-                        <img src="/2/2_2/actually_me.jpg" alt="Actual player: me playing on the court" style="width:100%;height:var(--ih);object-fit:contain;border-radius:12px;" />
-                        <figcaption class="muted" style="text-align:center;margin-top:6px;">But actually it's me playing on the court!</figcaption>
+                    <figure style="margin:0;position:relative;text-align:center;">
+                        <span class="hsv-wrap" style="height:var(--ih);">
+                            <img class="hsv-img" src="/2/1_4/me_hsv.png" alt="Portrait gradient orientations in HSV" style="max-height:100%;width:auto;display:block;" />
+                            <img class="hsv-compass" src="/2/1_4/orientation_compass.png" alt="HSV color mapping for orientations" style="width:36px;height:36px;" />
+                        </span>
+                        <figcaption class="muted" style="text-align:center;margin-top:6px;">Portrait gradient orientations (HSV)</figcaption>
                     </figure>
                 </div>
             </div>
         </section>
 
+        <!-- Part 2 -->
+        
+
+        <section class="card glass">
+            <h3>Part 2.1: Image "Sharpening" (Unsharp Mask)</h3>
+            <p class="muted" style="margin-top:0;">
+                I implement <strong>unsharp masking</strong> in two equivalent ways. Let <em>G</em> be a Gaussian of size
+                <code>GSIZE</code> and <code>SIGMA</code>. The <em>two‑step</em> method computes a high‑pass and then adds it back:
+            </p>
+            <div class="formula">\[\; high = image - (image * G) \;\]</div>
+            <div class="formula">\[\; sharpened = image + \text{amount} \cdot high \;\]</div>
+            <p class="muted" style="margin:6px 0 0;">
+                The <em>single‑pass</em> method builds an equivalent kernel and applies one convolution:
+            </p>
+            <div class="formula">\[\; K = (1+\text{amount})\,\delta - \text{amount}\,G, \quad sharpened = image * K \;\]</div>
+            <p class="muted" style="margin:6px 0 10px;">
+                I convolve <strong>per channel</strong> for color images and use <code>same</code> padding. The <em>amount</em> sweep
+                below shows how increasing <code>amount</code> enhances high frequencies; the “high‑frequency component”
+                panel visualizes <code>image − blurred</code> (contrast‑normalized) to make the boosted details explicit.
+            </p>
+            <div style="--ih:20px;display:grid;grid-template-columns:1fr 24px 1fr;gap:8px;align-items:center;margin-bottom:12px;">
+                <figure style="margin:0;">
+                    <img src="/2/2_1/1/taj_original_color.png" alt="Taj — original" style="width:100%;height:var(--ih);object-fit:contain;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Original (Taj)</figcaption>
+                </figure>
+                <div aria-hidden="true" style="font-size:22px;color:var(--text);text-align:center;">→</div>
+                <figure style="margin:0;">
+                    <img src="/2/2_1/1/taj_highpass_vis_color.png" alt="High-frequency component (visualized)" style="width:100%;height:var(--ih);object-fit:contain;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">High-frequency component (visualized)</figcaption>
+                </figure>
+            </div>
+            <p class="muted" style="margin:6px 0 8px;text-align:center;">Parameters (first example): kernel size 21, σ = 2.0, α (amount) = 2.</p>
+            <figure style="margin:10px 0 12px;">
+                <img src="/2/2_1/1/taj_sharpened_grid_color.png" alt="Alpha sweep for unsharp mask: 0.3, 0.5, 1.0, 1.5, 2, 3, 4" style="display:block;margin:0 auto;width:100%;max-width:1100px;height:auto;" />
+                <figcaption class="muted" style="text-align:center;margin-top:6px;">Alpha sweep (unsharp mask): 0.3, 0.5, 1.0, 1.5, 2, 3, 4</figcaption>
+            </figure>
+            <h4 style="margin:12px 0 6px;">Additional examples</h4>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;align-items:start;">
+                <div>
+                    <div class="compare fixed" data-compare style="--ih:260px;">
+                        <img class="compare-base" src="/2/2_1/1/taj_original_color.png" alt="Original image (sample 0)" />
+                        <div class="compare-overlay" style="clip-path: inset(0 0 0 50%)">
+                            <img src="/2/2_1/1/taj_sharpened_single_pass_color.png" alt="Sharpened image (sample 0)" />
+                        </div>
+                        <div class="compare-handle" style="left:50%"></div>
+                        <span class="compare-label left">Original</span>
+                        <span class="compare-label right">Sharpened</span>
+                    </div>
+                    <p class="muted" style="margin-top:6px;">Sample 0: original vs unsharp-masked.</p>
+                </div>
+                <div>
+                    <div class="compare fixed" data-compare style="--ih:260px;">
+                        <img class="compare-base" src="/2/2_1/2/image_original_color.png" alt="Original image (sample 1)" />
+                        <div class="compare-overlay" style="clip-path: inset(0 0 0 50%)">
+                            <img src="/2/2_1/2/image_sharpened_single_pass_color.png" alt="Sharpened image (sample 1)" />
+                        </div>
+                        <div class="compare-handle" style="left:50%"></div>
+                        <span class="compare-label left">Original</span>
+                        <span class="compare-label right">Sharpened</span>
+                    </div>
+                    <p class="muted" style="margin-top:6px;">Sample 1: original vs unsharp-masked.</p>
+                </div>
+                <div>
+                    <div class="compare fixed" data-compare style="--ih:260px;">
+                        <img class="compare-base" src="/2/2_1/3/emir_new Medium_original_color.png" alt="Original image (sample 2)" />
+                        <div class="compare-overlay" style="clip-path: inset(0 0 0 50%)">
+                            <img src="/2/2_1/3/emir_new Medium_sharpened_single_pass_color.png" alt="Sharpened image (sample 2)" />
+                        </div>
+                        <div class="compare-handle" style="left:50%"></div>
+                        <span class="compare-label left">Original</span>
+                        <span class="compare-label right">Sharpened</span>
+                    </div>
+                    <p class="muted" style="margin-top:6px;">Sample 2: original vs unsharp-masked.</p>
+                </div>
+            </div>
+            <div style="--ih:400px;display:grid;grid-template-columns:1fr 24px 1fr 24px 1fr;gap:8px;align-items:center;">
+                <figure style="margin:0;">
+                    <img src="/2/2_1/4/original.jpeg" alt="Original image" style="width:100%;height:var(--ih);object-fit:contain;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Original</figcaption>
+                </figure>
+                <div aria-hidden="true" style="font-size:22px;color:var(--text);text-align:center;">+</div>
+                <figure style="margin:0;">
+                    <img src="/2/2_1/4/blurred.png" alt="After Gaussian blur" style="width:100%;height:var(--ih);object-fit:contain;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">After blur</figcaption>
+                </figure>
+                <div aria-hidden="true" style="font-size:22px;color:var(--text);text-align:center;">→</div>
+                <figure style="margin:0;">
+                    <img src="/2/2_1/4/sharpened_blurred.png" alt="Sharpened blurred image" style="width:100%;height:var(--ih);object-fit:contain;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Sharpened blur</figcaption>
+                </figure>
+            </div>
+            <p class="muted" style="margin-top:8px;">
+                Compared to the blurred input, the sharpened output is <strong>visibly crisper</strong>, but this comes at a
+                <strong>cost in realism</strong>: boosted edges and micro‑contrast can make the image look a bit synthetic.
+                Although it resembles the original, high‑frequency detail that was <em>removed by the blur</em> cannot be
+                truly recovered; unsharp masking primarily <strong>increases local contrast</strong> around edges rather
+                than reconstructing lost texture.
+            </p>
+        </section>
+
+        <section class="card glass">
+            <h3>Part 2.2: Hybrid Images</h3>
+            
+            <div style="--ih:220px;display:grid;grid-template-columns:1fr 24px 1fr 1fr 24px 1fr;gap:8px;align-items:center;margin-bottom:10px;">
+                <figure style="margin:0;">
+                    <img src="/2/2_2/man.png" alt="Input 1 — man" style="width:100%;height:auto;max-height:var(--ih);object-fit:contain;display:block;margin:0 auto;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Input 1 (man)</figcaption>
+                </figure>
+                <div aria-hidden="true" style="font-size:22px;color:var(--text);text-align:center;">→</div>
+                <figure style="margin:0;">
+                    <img src="/2/2_2/lowpass_from_1_aligned_color.png" alt="Low-pass from input 1" style="width:100%;height:var(--ih);object-fit:contain;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Low-pass (man)</figcaption>
+                </figure>
+                <figure style="margin:0;">
+                    <img src="/2/2_2/cat.png" alt="Input 2 — cat" style="width:100%;height:var(--ih);object-fit:contain;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Input 2 (cat)</figcaption>
+                </figure>
+                <div aria-hidden="true" style="font-size:22px;color:var(--text);text-align:center;">→</div>
+                <figure style="margin:0;">
+                    <img src="/2/2_2/highpass_from_2_aligned_vis_color.png" alt="High-pass from input 2" style="width:100%;height:var(--ih);object-fit:contain;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">High-pass (cat)</figcaption>
+                </figure>
+            </div>
+            <p class="muted" style="margin:6px 0 8px;text-align:center;">Parameters (first example): low-pass kernel size 51 (σ = 6), high-pass kernel size 51 (σ = 7).</p>
+            <figure style="margin:0 0 12px;">
+                <img src="/2/2_2/hybrid.png" alt="Hybrid result (man + cat)" style="display:block;margin:0 auto;width:100%;max-width:280px;height:auto;" />
+                <figcaption class="muted" style="text-align:center;margin-top:6px;">Hybrid (man ⊕ cat)</figcaption>
+            </figure>
+
+            <h4 style="margin:16px 0 8px;">Example 2 — Sinner hybrid</h4>
+            <p class="muted" style="margin-top:0;">Inputs I chose for this example: Jannik Sinner and me.</p>
+            <div style="--ih:140px;display:grid;grid-template-columns:1fr 24px 1fr 24px 1fr 1fr;gap:8px;align-items:center;margin-bottom:10px;">
+                <figure style="margin:0;">
+                    <img src="/2/2_2/exmaple_2/1_me.jpeg" alt="Me (source)" style="width:100%;height:var(--ih);object-fit:contain;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Me — source</figcaption>
+                </figure>
+                <div aria-hidden="true" style="font-size:22px;color:var(--text);text-align:center;">+</div>
+                <figure style="margin:0;">
+                    <img src="/2/2_2/exmaple_2/2_sinner.jpeg" alt="Jannik Sinner (source)" style="width:100%;height:var(--ih);object-fit:contain;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Jannik Sinner — source</figcaption>
+                </figure>
+                <div aria-hidden="true" style="font-size:22px;color:var(--text);text-align:center;">=</div>
+                <figure style="margin:0;">
+                    <img src="/2/2_2/exmaple_2/looks_like_sinner.png" alt="Hybrid result (looks like Sinner)" style="width:100%;height:var(--ih);object-fit:contain;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Everybody thinks Jannik Sinner is a great tennis player — but the person playing is actually me (to the right of the hybrid image).</figcaption>
+                </figure>
+                <figure style="margin:0;">
+                    <img src="/2/2_2/exmaple_2/actually_me.jpg" alt="Actually me (reference)" style="width:100%;height:var(--ih);object-fit:contain;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Actually me</figcaption>
+                </figure>
+            </div>
+            <h4 style="margin:12px 0 6px;">Example 3 — Frequency analysis</h4>
+            <p class="muted" style="margin:0 0 6px;">Top: spatial images; Bottom: matching log‑magnitude spectra (FFT).</p>
+            <!-- Top row: spatial domain composition -->
+            <div style="--ih:220px;display:grid;grid-template-columns:1fr 24px 1fr 24px 1fr 24px 1fr 24px 1fr;gap:8px;align-items:center;margin-bottom:6px;">
+                <figure style="margin:0;">
+                    <img src="/2/2_2/frequencies/color_from_1.png" alt="Input 1 (color from 1)" style="width:100%;height:var(--ih);object-fit:contain;" />
+                </figure>
+                <div aria-hidden="true" style="font-size:22px;color:var(--text);text-align:center;">+</div>
+                <figure style="margin:0;">
+                    <img src="/2/2_2/frequencies/overlap_input2_aligned_color.png" alt="Input 2 (aligned)" style="width:100%;height:var(--ih);object-fit:contain;" />
+                </figure>
+                <div aria-hidden="true" style="font-size:22px;color:var(--text);text-align:center;">→</div>
+                <figure style="margin:0;">
+                    <img src="/2/2_2/frequencies/lowpass_from_1_color.png" alt="Low‑pass from input 1" style="width:100%;height:var(--ih);object-fit:contain;" />
+                </figure>
+                <div aria-hidden="true" style="font-size:22px;color:var(--text);text-align:center;">+</div>
+                <figure style="margin:0;">
+                    <img src="/2/2_2/frequencies/highpass_from_2_aligned_boosted_vis_color.png" alt="High‑pass from input 2 (aligned)" style="width:100%;height:var(--ih);object-fit:contain;" />
+                </figure>
+                <div aria-hidden="true" style="font-size:22px;color:var(--text);text-align:center;">=</div>
+                <figure style="margin:0;">
+                    <img src="/2/2_2/frequencies/hybrid.png" alt="Hybrid (spatial)" style="width:100%;height:var(--ih);object-fit:contain;" />
+                </figure>
+            </div>
+            <!-- Bottom row: frequency domain (log magnitude) under each spatial image above -->
+            <div style="--ih:160px;display:grid;grid-template-columns:1fr 24px 1fr 24px 1fr 24px 1fr 24px 1fr;gap:8px;align-items:center;margin-bottom:12px;">
+                <figure style="margin:0;">
+                    <img src="/2/2_2/frequencies/fft_log_overlap_input1.png" alt="FFT(Input 1)" style="width:100%;height:var(--ih);object-fit:contain;" />
+                </figure>
+                <div aria-hidden="true" style="font-size:18px;color:var(--text);text-align:center;">+</div>
+                <figure style="margin:0;">
+                    <img src="/2/2_2/frequencies/fft_log_overlap_input2_aligned.png" alt="FFT(Input 2 aligned)" style="width:100%;height:var(--ih);object-fit:contain;" />
+                </figure>
+                <div aria-hidden="true" style="font-size:18px;color:var(--text);text-align:center;">→</div>
+                <figure style="margin:0;">
+                    <img src="/2/2_2/frequencies/fft_log_overlap_lowpass.png" alt="FFT(Low‑pass from 1)" style="width:100%;height:var(--ih);object-fit:contain;" />
+                </figure>
+                <div aria-hidden="true" style="font-size:18px;color:var(--text);text-align:center;">+</div>
+                <figure style="margin:0;">
+                    <img src="/2/2_2/frequencies/fft_log_overlap_highpass_aligned.png" alt="FFT(High‑pass from 2)" style="width:100%;height:var(--ih);object-fit:contain;" />
+                </figure>
+                <div aria-hidden="true" style="font-size:18px;color:var(--text);text-align:center;">=</div>
+                <figure style="margin:0;">
+                    <img src="/2/2_2/frequencies/fft_log_overlap_hybrid.png" alt="FFT(Hybrid)" style="width:100%;height:var(--ih);object-fit:contain;" />
+                </figure>
+            </div>
+            <p class="muted" style="margin:0 0 12px;">
+                As seen in the spectra, the <strong>low‑pass</strong> and <strong>high‑pass</strong> bands are complementary; taken together
+                they reproduce the <strong>hybrid’s FFT</strong> (up to display scaling in the log‑magnitude plots).
+            </p>
+        </section>
+
         <section class="card glass">
             <h3>Part 2.2 — Bells &amp; Whistles: Color in Hybrid Images</h3>
-            <div class="placeholder"> </div>
+            <div style="--ih:400px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;align-items:start;">
+                <figure style="margin:0;">
+                    <img src="/2/2_2/bells/hybrid_low_grey.png" alt="Hybrid with low-frequency in grayscale" style="width:100%;height:var(--ih);object-fit:contain;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Low-pass in grayscale</figcaption>
+                </figure>
+                <figure style="margin:0;">
+                    <img src="/2/2_2/bells/hybrid_both_grey.png" alt="Hybrid with both images in grayscale" style="width:100%;height:var(--ih);object-fit:contain;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Both grayscale</figcaption>
+                </figure>
+                <figure style="margin:0;">
+                    <img src="/2/2_2/bells/hybrid_both_color.png" alt="Hybrid with both images in color" style="width:100%;height:var(--ih);object-fit:contain;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Both color</figcaption>
+                </figure>
+                <figure style="margin:0;">
+                    <img src="/2/2_2/bells/hybrid_high_grey.png" alt="Hybrid with high-frequency in grayscale" style="width:100%;height:var(--ih);object-fit:contain;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">High-pass in grayscale</figcaption>
+                </figure>
+            </div>
+            <p class="muted" style="margin:8px 0 6px;">
+                I tried all four combinations of color vs grayscale for the hybrid. A clear trend
+                emerges: <strong>high frequencies carry little perceived color</strong>. Fine details (whiskers, pores,
+                hair) occupy small areas and are dominated by luminance contrast, while chroma signals in both
+                cameras and human vision are effectively <em>lower‑pass</em> and lower resolution. You can still spot
+                color in the high‑pass layer—look closely at the cat’s eyes—but it is much subtler than the
+                corresponding luminance edges.
+            </p>
+            <p class="muted" style="margin:0 0 6px;">
+                When the <strong>low‑pass is color</strong> and the <strong>high‑pass is grayscale</strong>, the colored low‑frequency
+                face tends to dominate perception; the grayscale detail rides along but is harder to parse because
+                our attention is drawn to the large, colorful regions. In the opposite setting—<strong>high‑pass in color</strong>
+                and <strong>low‑pass in grayscale</strong>—the effect works best for me: up close, the colored high‑frequency
+                features from the cat pop and make that subject more present; as you step back, those fine colored
+                details fade away with distance, and you cleanly perceive the grayscale low‑pass portrait.
+            </p>
         </section>
 
         <section class="card glass">
             <h3>Part 2.3: Gaussian and Laplacian Stacks</h3>
-            <div class="placeholder"> </div>
+            <p class="muted" style="margin-top:0;">
+                Gaussian stacks (rows) are shown from <strong>left → right</strong>: the leftmost image is the
+                <strong>original</strong>, and each image to the right is a <strong>blurred</strong> version of the image to its
+                left with an increasingly larger Gaussian (kernel size grows each step).
+            </p>
+            <p class="muted" style="margin:0 0 8px;">
+                Laplacian stacks are formed by <strong>subtracting neighbors</strong> in the Gaussian stack. Each Laplacian
+                image is essentially the <em>band‑pass</em> content: the difference between a level and its next, so the
+                leftmost Laplacian emphasizes the <strong>finest high frequencies</strong>, and moving right we step down in
+                frequency content roughly one “octave” at a time.
+            </p>
+            <p class="muted" style="margin:0 0 8px;">
+                The <strong>masked Laplacian</strong> rows apply the Laplacian at each level together with that level’s
+                <em>Gaussian mask</em>. This reveals the <strong>actual frequencies that will be contributed</strong> when the
+                masked pyramids are blended and reconstructed. I also include the <strong>Gaussian pyramid of the mask</strong>
+                so it is clear how weights evolve across scales.
+            </p>
+            <p class="muted" style="margin:6px 0 8px;text-align:center;">Parameters (first example): kernel size 51, base σ₀ = 1.0, growth factor = 2.0, levels = 8.</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;align-items:start;">
+                <figure style="margin:0;grid-column:1 / -1;">
+                    <img src="/2/2_3/grid_gaussian_A.png" alt="Gaussian pyramid of A" style="width:100%;height:auto;object-fit:contain;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Gaussian pyramid (A)</figcaption>
+                </figure>
+                <figure style="margin:0;grid-column:1 / -1;">
+                    <img src="/2/2_3/grid_laplacian_masked_A.png" alt="Masked Laplacian pyramid of A" style="width:100%;height:auto;object-fit:contain;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Masked Laplacian pyramid (A)</figcaption>
+                </figure>
+                <figure style="margin:0;grid-column:1 / -1;">
+                    <img src="/2/2_3/grid_gaussian_B.png" alt="Gaussian pyramid of B" style="width:100%;height:auto;object-fit:contain;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Gaussian pyramid (B)</figcaption>
+                </figure>
+                <figure style="margin:0;grid-column:1 / -1;">
+                    <img src="/2/2_3/grid_laplacian_masked_B.png" alt="Masked Laplacian pyramid of B" style="width:100%;height:auto;object-fit:contain;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Masked Laplacian pyramid (B)</figcaption>
+                </figure>
+                <figure style="margin:0;grid-column:1 / -1;">
+                    <img src="/2/2_3/grid_laplacian_blend.png" alt="Blended Laplacian pyramid" style="width:100%;height:auto;object-fit:contain;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Blended Laplacian pyramid</figcaption>
+                </figure>
+                <figure style="margin:0;grid-column:1 / -1;">
+                    <img src="/2/2_3/burt_adelson_grid.png" alt="Burt–Adelson pyramid grid" style="width:50%;height:auto;object-fit:contain;display:block;margin:0 auto;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Burt–Adelson grid (reference)</figcaption>
+                </figure>
+            </div>
         </section>
 
         <section class="card glass">
             <h3>Part 2.4: Multiresolution Blending (Oraple)</h3>
             <p class="muted" style="margin-top:0;">Inputs (masked preview), final blend, and reconstruction grid.</p>
-            <div style="--ih:300px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;align-items:start;">
+            <p class="muted" style="margin:0 0 8px;">
+                The <strong>Gaussian</strong> and <strong>Laplacian</strong> stacks for the corresponding inputs and mask are
+                presented in <em>Part 2.3</em>. Here, we reuse those pyramids to perform blending. In particular, the
+                “<em>blended Laplacian pyramid</em>” row is the per‑level <strong>mask‑weighted sum</strong> (i.e., average/sum
+                with mask weights) of the masked Laplacians from each input at the same frequency band. The final
+                image is obtained by <strong>reconstructing</strong> from this blended Laplacian pyramid using the coarsest
+                Gaussian level.
+            </p>
+            <div style="--ih:150px;display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;">
                 <figure style="margin:0;">
-                    <img src="/2/2_4/A_masked_plus_B_masked.png" alt="Inputs masked together (preview)" style="width:100%;height:var(--ih);object-fit:contain;border-radius:12px;" />
+                    <img src="/2/2_4/A_masked_plus_B_masked.png" alt="Inputs masked together (preview)" style="width:100%;height:var(--ih);object-fit:contain;" />
                     <figcaption class="muted" style="text-align:center;margin-top:6px;">Inputs masked together (preview)</figcaption>
                 </figure>
+                <div aria-hidden="true" style="font-size:28px;color:var(--text);">→</div>
                 <figure style="margin:0;">
-                    <img src="/2/2_4/blended.png" alt="Final blended result" style="width:100%;height:var(--ih);object-fit:contain;border-radius:12px;" />
+                    <img src="/2/2_4/blended.png" alt="Final blended result" style="width:100%;height:var(--ih);object-fit:contain;" />
                     <figcaption class="muted" style="text-align:center;margin-top:6px;">Final blended result</figcaption>
                 </figure>
                 <figure style="margin:0;grid-column:1 / -1;">
-                    <img src="/2/2_4/grid_reconstruction.png" alt="Reconstruction grid (Gaussian/Laplacian stacks)" style="width:100%;height:auto;object-fit:contain;border-radius:12px;" />
+                    <img src="/2/2_4/grid_reconstruction.png" alt="Reconstruction grid (Gaussian/Laplacian stacks)" style="width:100%;height:auto;object-fit:contain;" />
                     <figcaption class="muted" style="text-align:center;margin-top:6px;">Reconstruction grid</figcaption>
+                </figure>
+            </div>
+
+            <p class="muted" style="margin:6px 0 8px;text-align:center;">Parameters (first example): kernel size 101, base σ₀ = 1.0, growth factor = 2.0, levels = 8, mask σ = 2.0.</p>
+
+            <h4 style="margin:16px 0 8px;">Example: Blending within the same image</h4>
+            <div style="--ih:260px;display:grid;grid-template-columns:1fr 24px 1fr;gap:8px;align-items:center;">
+                <figure class="fig-fixed" style="margin:0;">
+                    <img src="/2/2_4/examples/singe_boat.jpg" alt="Lonely sailor (source)" style="width:100%;height:var(--ih);object-fit:contain;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Lonely sailor — source</figcaption>
+                </figure>
+                <div aria-hidden="true" style="font-size:24px;color:var(--text);text-align:center;">→</div>
+                <figure class="fig-fixed" style="margin:0;">
+                    <img src="/2/2_4/examples/fleet.png" alt="Sailor with a companion (blended result)" style="width:100%;height:var(--ih);object-fit:contain;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Sailor gets a companion — blended</figcaption>
+                </figure>
+            </div>
+
+            <h4 style="margin:16px 0 8px;">In-depth example</h4>
+            <p class="muted" style="margin:0 0 8px;">
+                For this example I built a <strong>custom mask</strong> to composite the <em>Death Star</em> into a real sky
+                photograph. The mask defines where each input contributes across pyramid levels, so bright mask regions
+                pull in more of the Death Star while dark regions preserve the sky. The Gaussian mask pyramid and the
+                masked Laplacians below show how the contribution tapers smoothly across scales, yielding a seamless blend.
+            </p>
+            <div style="--ih:260px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;align-items:center;">
+                <figure style="margin:0;">
+                    <img src="/2/2_4/in_depth_example/input_A.png" alt="Input A" style="width:100%;height:var(--ih);object-fit:contain;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Input A</figcaption>
+                </figure>
+                <figure style="margin:0;">
+                    <img src="/2/2_4/in_depth_example/input_B.jpeg" alt="Input B" style="width:100%;height:var(--ih);object-fit:contain;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Input B</figcaption>
+                </figure>
+                <figure style="margin:0;">
+                    <img src="/2/2_4/in_depth_example/input_B_located.png" alt="Input B (aligned/located)" style="width:100%;height:var(--ih);object-fit:contain;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Input B (aligned/located)</figcaption>
+                </figure>
+                <figure style="margin:0;">
+                    <img src="/2/2_4/in_depth_example/mask.png" alt="Mask" style="width:100%;height:var(--ih);object-fit:contain;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Mask</figcaption>
+                </figure>
+                <figure style="margin:0;grid-column:1 / -1;">
+                    <img src="/2/2_4/in_depth_example/grid_mask_gaussian.png" alt="Gaussian pyramid of mask" style="width:100%;height:auto;object-fit:contain;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Gaussian pyramid (mask)</figcaption>
+                </figure>
+                <figure style="margin:0;grid-column:1 / -1;">
+                    <img src="/2/2_4/in_depth_example/grid_laplacian_masked_A.png" alt="Masked Laplacian A" style="width:100%;height:auto;object-fit:contain;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Masked Laplacian (A)</figcaption>
+                </figure>
+                <figure style="margin:0;grid-column:1 / -1;">
+                    <img src="/2/2_4/in_depth_example/grid_laplacian_masked_B.png" alt="Masked Laplacian B" style="width:100%;height:auto;object-fit:contain;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Masked Laplacian (B)</figcaption>
+                </figure>
+                <figure style="margin:0;grid-column:1 / -1;">
+                    <img src="/2/2_4/in_depth_example/grid_laplacian_blend.png" alt="Blended Laplacian pyramid" style="width:100%;height:auto;object-fit:contain;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Blended Laplacian pyramid</figcaption>
+                </figure>
+                <figure style="margin:0;grid-column:1 / -1;">
+                    <img src="/2/2_4/in_depth_example/grid_reconstruction.png" alt="Reconstruction grid" style="width:100%;height:auto;object-fit:contain;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Reconstruction grid</figcaption>
+                </figure>
+                <figure style="margin:0;grid-column:1 / -1;">
+                    <img src="/2/2_4/in_depth_example/blended.png" alt="Final blended result (in-depth example)" style="display:block;margin:0 auto;width:100%;max-width:1000px;height:auto;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Final blended result</figcaption>
                 </figure>
             </div>
         </section>
 
         <section class="card glass">
             <h3>Part 2.4 — Bells &amp; Whistles: Color in Blending</h3>
-            <div class="placeholder"> </div>
+            <p class="muted" style="margin:0 0 10px;">
+                Instead of blending in display-encoded sRGB, I blend in linear light.  Simple averages or mask-weighted sums performed directly in sRGB darken midtones and shift colours because sRGB is gamma-encoded (about ≈2.2; see <a href="https://en.wikipedia.org/wiki/SRGB">sRGB</a>).  Inputs are converted from sRGB to linear light by the pipeline, which then constructs the Gaussian/Laplacian stacks and blends them before returning the output to sRGB for display.  Each side appears more like its original as a result.  In contrast to linearisation, which causes the apple's red to become noticeably darker after blending, linear-light blending preserves the apple's red tone nearly exactly.
+            </p>
+            <div style="margin:0 auto;max-width:800px;">
+                <div class="compare fixed" data-compare style="--ih:260px;max-width:800px;">
+                    <img class="compare-base" src="/2/2_4/bells/no_srgb.png" alt="No sRGB" />
+                    <div class="compare-overlay" style="clip-path: inset(0 0 0 50%)">
+                        <img src="/2/2_4/bells/with_srgb.png" alt="With sRGB" />
+                    </div>
+                    <div class="compare-handle" style="left:50%"></div>
+                    <span class="compare-label left">No sRGB</span>
+                    <span class="compare-label right">With sRGB</span>
+                </div>
+            </div>
         </section>
 
-        <section class="card glass">
-            <h2>Deliverables Checklist</h2>
-            <div class="placeholder"> </div>
-        </section>
+        
+
+        
 
         <section class="card glass">
             <h2>Most Important Thing I Learned</h2>
-            <div class="placeholder"> </div>
+            <p class="muted" style="margin-top:0;">
+                I greatly enjoyed this project. It gave me a much deeper, hands‑on intuition for
+                <strong>frequencies in images</strong> and how they shape perception.
+            </p>
+            <p class="muted" style="margin:6px 0 0;">
+                An image is not just a grid of pixel values—it is also a <strong>multi‑scale frequency
+                composition</strong>. By manipulating different bands (low vs high), we can dramatically
+                change how an image looks and what the viewer perceives: sharpening boosts local
+                contrast, blurring suppresses fine detail, hybrids reveal different subjects at
+                different viewing distances, and multiresolution blending shows how <em>scale‑aware
+                masks</em> control what survives across levels. I wasn’t fully aware before this project
+                how strongly frequency content—and the fact that some bands can be effectively invisible
+                to humans at certain distances—controls what we actually see.
+            </p>
         </section>
 
     </div>
@@ -318,4 +756,3 @@
     </script>
 </body>
 </html>
-

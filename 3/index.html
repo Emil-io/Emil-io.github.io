@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Project 3 (Full Project)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f5f7fb;
+            --text: #0f172a;
+            --muted: #475569;
+            --border: rgba(255,255,255,0.35);
+            --accent: #2563eb;
+            --glass-bg: rgba(255,255,255,0.45);
+            --glass-shadow: 0 10px 30px rgba(2,6,23,0.08);
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            margin: 0;
+            line-height: 1.65;
+            color: var(--text);
+            background: var(--bg);
+            text-align: center;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 32px 20px; }
+        header { margin-bottom: 20px; padding: 16px; border-radius: 16px; display: flex; align-items: center; gap: 12px; }
+        header h1 { margin: 0; font-size: 32px; }
+        header p { margin: 6px 0 0; color: var(--text); }
+        nav a { color: var(--accent); text-decoration: none; }
+        nav a:hover { text-decoration: underline; }
+        .glass {
+            position: relative;
+            border-radius: 18px;
+            border: 1px solid transparent;
+            background-image:
+                linear-gradient(135deg, rgba(255,255,255,0.55), rgba(255,255,255,0.25)),
+                linear-gradient(135deg, rgba(255,255,255,0.85), rgba(17,24,39,0.08));
+            background-origin: padding-box, border-box;
+            background-clip: padding-box, border-box;
+            box-shadow: var(--glass-shadow);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            backdrop-filter: blur(16px) saturate(180%);
+        }
+        .glass > * { position: relative; z-index: 1; }
+        .glass::before {
+            content: "";
+            position: absolute;
+            inset: 1px;
+            border-radius: inherit;
+            pointer-events: none;
+            background: radial-gradient(120% 80% at 0% 0%, rgba(255,255,255,0.65), rgba(255,255,255,0) 60%);
+            mix-blend-mode: screen;
+            z-index: 0;
+        }
+        .glass::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            pointer-events: none;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -1px 0 rgba(255,255,255,0.35), inset 0 0 40px rgba(255,255,255,0.12);
+            z-index: 0;
+        }
+        .card { padding: 20px; margin: 20px 0; text-align: left; }
+        .muted { color: var(--muted); }
+        img { border-radius: 12px; }
+        /* Before/After Slider */
+        .compare { position: relative; width: 100%; max-width: 900px; margin: 12px auto 0; overflow: hidden; box-shadow: var(--glass-shadow); border-radius: 12px; }
+        .compare-base, .compare-overlay img { display: block; width: 100%; height: auto; user-select: none; }
+        .compare-overlay { position: absolute; inset: 0; overflow: hidden; will-change: clip-path; }
+        .compare-handle { position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; background: rgba(255,255,255,0.9); box-shadow: 0 0 0 1px rgba(15,23,42,0.35); cursor: ew-resize; }
+        .compare-handle::before { content: ""; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 18px; height: 18px; border-radius: 50%; background: rgba(255,255,255,0.95); box-shadow: 0 1px 2px rgba(15,23,42,0.2), 0 0 0 1px rgba(15,23,42,0.25); }
+        .compare-label { position: absolute; top: 8px; padding: 4px 8px; background: rgba(15,23,42,0.6); color: #fff; border-radius: 999px; font-size: 12px; }
+        .compare-label.left { left: 8px; }
+        .compare-label.right { right: 8px; }
+        /* Zoomed full-size slider */
+        .compare-zoom .compare-base,
+        .compare-zoom .compare-overlay img { transform: scale(3); transform-origin: 33.333% 50%; }
+        @media print {
+            @page { size: auto; margin: 12mm; }
+            html, body { background: #ffffff !important; color: #000000 !important; }
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .container { max-width: none; padding: 0; }
+            header.glass, .card.glass { background: #ffffff !important; background-image: none !important; border: 1px solid #cccccc !important; box-shadow: none !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+            nav a { color: #000000 !important; text-decoration: underline; }
+        }
+    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="utf-8" />
+    <meta name="description" content="Project 3 - Image Warping, Mosaicing, and Feature Matching (full project)" />
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="glass">
+            <img src="/logo.png" alt="UC Berkeley logo" style="height:64px;width:auto;" />
+            <div style="text-align:left;">
+                <h1>Project 3</h1>
+                <p>CS180/280A: Intro to Computer Vision and Computational Photography</p>
+            </div>
+            <nav style="margin-left:auto;"><a href="/index.html">← Back to Home</a></nav>
+        </header>
+
+        <section class="card glass">
+            <h2 style="margin-top:0;">Image Warping and Mosaics</h2>
+            <div id="cover-layout" style="display:grid;grid-template-columns:minmax(0,200px) 40px minmax(0,560px);gap:12px;align-items:center;justify-content:center;margin-top:10px;">
+                <div id="cover-inputs" style="display:grid;grid-template-rows:repeat(3,1fr);gap:8px;">
+                    <img src="/3/a_4/example_2/1_image.jpeg" alt="Cover — Example 2 input 1" style="width:100%;height:100%;object-fit:contain;border-radius:12px;" />
+                    <img src="/3/a_4/example_2/2_image.jpeg" alt="Cover — Example 2 input 2" style="width:100%;height:100%;object-fit:contain;border-radius:12px;" />
+                    <img src="/3/a_4/example_2/3_image.jpeg" alt="Cover — Example 2 input 3" style="width:100%;height:100%;object-fit:contain;border-radius:12px;" />
+                </div>
+                <div aria-hidden="true" style="text-align:center;font-size:28px;line-height:1;">→</div>
+                <figure style="margin:0;">
+                    <img id="cover-mosaic" src="/3/a_4/example_2/mosaic_clean.jpg" alt="Cover — Example 2 mosaic" style="width:100%;height:auto;display:block;margin:0 auto;max-width:560px;" />
+                </figure>
+            </div>
+        </section>
+
+        <section class="card glass">
+            <h3>A.1: Shoot and Digitize Pictures</h3>
+            <div class="muted" style="margin-bottom:8px;">
+                I captured each set to induce projective (perspective) transforms by fixing the center of projection and rotating the camera. Photos were taken on an iPhone 16 using <strong>AE/AF LOCK</strong> (press-and-hold) to keep exposure and focus constant, which later helps produce clean mosaics.
+            </div>
+            <div style="display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));align-items:start;">
+                <div style="border:1px solid var(--border);border-radius:12px;padding:12px;">
+					<h4 style="margin:0 0 8px;">Set 1 — Music Library (campus)</h4>
+                    <div style="display:grid;grid-template-columns:1fr;gap:10px;margin:0 auto;justify-items:center;">
+                        <figure style="margin:0;">
+                            <img src="/3/a_1/example_1/image_1.jpeg" alt="Set 1 - Source 1" style="width:100%;height:auto;" />
+                            <figcaption class="muted" style="text-align:center;margin-top:6px;">Source 1 — Left</figcaption>
+                        </figure>
+                        <figure style="margin:0;">
+                            <img src="/3/a_1/example_1/image_2.jpeg" alt="Set 1 - Source 2" style="width:100%;height:auto;" />
+                            <figcaption class="muted" style="text-align:center;margin-top:6px;">Source 2 — Right</figcaption>
+                        </figure>
+                    </div>
+                </div>
+
+				<div style="border:1px solid var(--border);border-radius:12px;padding:12px;">
+					<h4 style="margin:0 0 8px;">Set 2 — WeWork, Salesforce Tower (SF)</h4>
+                    <div style="display:grid;grid-template-columns:1fr;gap:10px;margin:0 auto;justify-items:center;">
+                        <figure style="margin:0;">
+                            <img src="/3/a_1/example_2/image_1.jpeg" alt="Set 2 - Source 1" style="width:100%;height:auto;" />
+                            <figcaption class="muted" style="text-align:center;margin-top:6px;">Source 1 — Left</figcaption>
+                        </figure>
+                        <figure style="margin:0;">
+                            <img src="/3/a_1/example_2/image_2.jpeg" alt="Set 2 - Source 2" style="width:100%;height:auto;" />
+                            <figcaption class="muted" style="text-align:center;margin-top:6px;">Source 2 — Middle</figcaption>
+                        </figure>
+                        <figure style="margin:0;">
+                            <img src="/3/a_1/example_2/image_3.jpeg" alt="Set 2 - Source 3" style="width:100%;height:auto;" />
+                            <figcaption class="muted" style="text-align:center;margin-top:6px;">Source 3 — Right</figcaption>
+                        </figure>
+                    </div>
+                </div>
+				<div style="border:1px solid var(--border);border-radius:12px;padding:12px;">
+					<h4 style="margin:0 0 8px;">Set 3 — WeWork, Salesforce Tower (SF)</h4>
+                    <div style="display:grid;grid-template-columns:1fr;gap:10px;margin:0 auto;justify-items:center;">
+                        <figure style="margin:0;">
+                            <img src="/3/a_1/example_3/image_1.jpeg" alt="Set 3 - Source 1" style="width:100%;height:auto;" />
+                            <figcaption class="muted" style="text-align:center;margin-top:6px;">Source 1 — Left</figcaption>
+                        </figure>
+                        <figure style="margin:0;">
+                            <img src="/3/a_1/example_3/image_2.jpeg" alt="Set 3 - Source 2" style="width:100%;height:auto;" />
+                            <figcaption class="muted" style="text-align:center;margin-top:6px;">Source 2 — Middle</figcaption>
+                        </figure>
+                        <figure style="margin:0;">
+                            <img src="/3/a_1/example_3/image_3.jpeg" alt="Set 3 - Source 3" style="width:100%;height:auto;" />
+                            <figcaption class="muted" style="text-align:center;margin-top:6px;">Source 3 — Right</figcaption>
+                        </figure>
+                    </div>
+                </div>
+            </div>
+            
+        </section>
+
+        <section class="card glass">
+            <h3>A.2: Recover Homographies</h3>
+            <h4 style="margin:8px 0 6px;">General idea</h4>
+            <div class="muted" style="margin-bottom:8px;">
+                Using point correspondences between two images, we can solve for the projective transform matrix <em>H</em> that warps pixels from one image plane to the other.
+            </div>
+            <div class="muted" style="margin:0 0 8px;">
+                <h4 style="margin:8px 0 6px;">Derivation</h4>
+                Consider corresponding pixel coordinates \((x_i, y_i)\) in image 1 and \((x'_i, y'_i)\) in image 2. With a camera rotation (or a planar scene), the two views are related by a <em>planar projective transform</em> (homography) between their image planes. We reason in projective space by fixing the common image plane at \(z=1\) and using homogeneous coordinates: \(\mathbf{a}_i=[x_i\;y_i\;1]^\top\) and \(\mathbf{b}_i=[x'_i\;y'_i\;1]^\top\), each defined up to scale.
+                
+                A homography \(H\) maps viewing rays between the planes: \(\tilde{\mathbf{b}}_i \sim H\,\tilde{\mathbf{a}}_i\). In coordinates we write
+                \[
+                \mathbf{b}_i \;=\; H\,\mathbf{a}_i,\qquad
+                \mathbf{a}_i = [x_i\; y_i\; 1]^\top,\;\;
+                \mathbf{b}_i = [x'_i\; y'_i\; 1]^\top.
+                \]
+                \[
+                \begin{bmatrix}
+                x'_i\\[2pt] y'_i\\[2pt] 1
+                \end{bmatrix}
+                =
+                \begin{bmatrix}
+                h_{11} & h_{12} & h_{13}\\
+                h_{21} & h_{22} & h_{23}\\
+                h_{31} & h_{32} & h_{33}
+                \end{bmatrix}
+                \begin{bmatrix}
+                x_i\\[2pt] y_i\\[2pt] 1
+                \end{bmatrix}.
+                \]
+
+                We rescale the vector to recover image coordinates by dividing the first two components by the third (\(z\)): \(x \leftarrow x/z\), \(y \leftarrow y/z\). This yields the standard form
+                \[x'_i = \frac{h_{11}x_i + h_{12}y_i + h_{13}}{h_{31}x_i + h_{32}y_i + h_{33}},\qquad
+                  y'_i = \frac{h_{21}x_i + h_{22}y_i + h_{23}}{h_{31}x_i + h_{32}y_i + h_{33}}.\]
+                <h4 style="margin:10px 0 6px;">Solving for H</h4>
+                Because the model is defined only up to a global scale (multiplying all \(h_{jk}\) by the same constant leaves the mapping unchanged), we can fix h to \(h_{33}=1\). This leaves us with only 8 unknowns. Rearranging each correspondence results in two linear equations:
+                \[
+                x'_i\big(h_{31}x_i + h_{32}y_i + 1\big) = h_{11}x_i + h_{12}y_i + h_{13},\qquad
+                y'_i\big(h_{31}x_i + h_{32}y_i + 1\big) = h_{21}x_i + h_{22}y_i + h_{23}.
+                \]
+                <div class="muted" style="margin:4px 0 6px;">Rearranged to be linear in the unknowns:</div>
+                \[
+                x_i h_{11} + y_i h_{12} + h_{13} - x'_i x_i h_{31} - x'_i y_i h_{32} = x'_i,\qquad
+                x_i h_{21} + y_i h_{22} + h_{23} - y'_i x_i h_{31} - y'_i y_i h_{32} = y'_i.
+                \]
+                \[\big[\,x_i\ y_i\ 1\ 0\ 0\ 0\ -x_ix'_i\ -y_ix'_i\,\big]\\,\mathbf{h} = x'_i,\qquad
+                  \big[\,0\ 0\ 0\ x_i\ y_i\ 1\ -x_iy'_i\ -y_iy'_i\,\big]\\,\mathbf{h} = y'_i,\]
+                with \(\mathbf{h}=[h_{11},h_{12},h_{13},h_{21},h_{22},h_{23},h_{31},h_{32}]^\top\). Stacking over all points gives \(A\mathbf{h}=\mathbf{b}\), which we can then solve solve with least squares.
+            </div>
+            <div style="display:grid;grid-template-columns:1fr;gap:10px;">
+                <h4 style="margin:0 0 6px;">Examples</h4>
+                <h5 style="margin:0 0 6px;">Correspondences</h5>
+                <div class="muted" style="margin:0 0 8px;">
+                    Correspondences were selected manually by clicking distinctive points across the image pairs to precisely align pixels before estimating the homography.
+                </div>
+                <figure style="margin:0;">
+                    <img src="/3/a_2/example_1/correspondences_visualization.png" alt="Set 1 — Correspondences visualization" style="width:100%;height:auto;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Set 1 — Correspondences</figcaption>
+                </figure>
+                
+                <h5 style="margin:6px 0 6px;">Linear system and recovered H</h5>
+                <div style="display:grid;grid-template-columns:minmax(0,1fr) 40px minmax(0,1fr);gap:12px;align-items:center;">
+                    <figure style="margin:0;">
+                        <div style="padding:0;border:0;background:transparent;max-width:520px;margin:0 auto;font-size:0.9em;">
+\[
+\underbrace{\begin{bmatrix}
+1195 & 175 & 1 & 0 & 0 & 0 & -897445 & -131425 \\
+0 & 0 & 0 & 1195 & 175 & 1 & -280825 & -41125 \\
+1025 & 230 & 1 & 0 & 0 & 0 & -628325 & -140990 \\
+0 & 0 & 0 & 1025 & 230 & 1 & -266500 & -59800 \\
+780 & 223 & 1 & 0 & 0 & 0 & -296400 & -84740 \\
+0 & 0 & 0 & 780 & 223 & 1 & -165360 & -47276 \\
+1059 & 324 & 1 & 0 & 0 & 0 & -675642 & -206712 \\
+0 & 0 & 0 & 1059 & 324 & 1 & -370650 & -113400 \\
+\vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots
+\end{bmatrix}}_{A}
+\cdot
+\underbrace{\begin{bmatrix}
+h_{11}\\ h_{12}\\ h_{13}\\ h_{21}\\ h_{22}\\ h_{23}\\ h_{31}\\ h_{32}
+\end{bmatrix}}_{h}
+=
+\underbrace{\begin{bmatrix}
+751\\ 235\\ 613\\ 260\\ 380\\ 212\\ 638\\ 350\\ \vdots
+\end{bmatrix}}_{b}
+\]
+                            
+                        </div>
+                    </figure>
+                    <div aria-hidden="true" style="text-align:center;font-size:28px;line-height:1;display:flex;align-items:center;justify-content:center;">→</div>
+                    <figure style="margin:0;">
+                        <div class="muted" style="text-align:center;margin:0 0 6px;">Recovered homography matrix (from JSON)</div>
+                        <div style="padding:0;border:0;background:transparent;max-width:520px;margin:0 auto;font-size:0.9em;">
+\[
+H\;\approx\;
+\begin{bmatrix}
+1.91953 & -0.109304 & -881.483100 \\
+0.436998 & 1.576739 & -362.117488 \\
+0.000719554 & -0.0000300114 & 1
+\end{bmatrix}
+\]
+                        </div>
+                    </figure>
+                </div>
+                
+                <h5 style="margin:6px 0 6px;">Additional sets</h5>
+                <div style="display:grid;grid-template-columns:1fr;gap:12px;align-items:start;max-width:1100px;margin:0 auto;">
+                    <figure style="margin:0;">
+                        <img src="/3/a_2/example_2/correspondences_visualization.png" alt="Set 2 — Correspondences visualization" style="width:75%;height:auto;display:block;margin:0 auto;" />
+                        <figcaption class="muted" style="text-align:center;margin-top:6px;">Set 2 — Correspondences</figcaption>
+                    </figure>
+                    <figure style="margin:0;">
+                        <img src="/3/a_2/example_3/correspondences_visualization.png" alt="Set 3 — Correspondences visualization" style="width:75%;height:auto;display:block;margin:0 auto;" />
+                        <figcaption class="muted" style="text-align:center;margin-top:6px;">Set 3 — Correspondences</figcaption>
+                    </figure>
+                </div>
+            </div>
+        </section>
+
+        <section class="card glass">
+            <h3>A.3: Warp the Images</h3>
+            <div class="muted" style="margin-bottom:8px;">
+                Now that we can compute the homography <em>H</em>, we can project one image into the plane of another.
+            </div>
+
+            <div class="muted" style="margin:8px 0 0;">
+				After warping, destination pixels land at coordinates that are floting points values, so we need interpolation. I am using an inverse‑mapping pipeline: compute <em>H</em><sup>−1</sup>, project the source corners of each image with <em>H</em> to outline its shape on the destination canvas, then for each integer pixel inside that outline, map it back with <em>H</em><sup>−1</sup> to its location on the source image.
+				<div style="margin-top:6px;">Sampling methods:</div>
+				<ul style="margin:6px 0 0;padding-left:18px;">
+					<li><strong>Nearest neighbor</strong>: pick the value of the <em>single</em> closest source pixel.</li>
+					<li><strong>Bilinear</strong>: blend the <em>four</em> surrounding pixels using fractional offsets \(dx,dy\): weights \((1-dx)(1-dy),\; dx(1-dy),\; (1-dx)dy,\; dx\,dy\).</li>
+				</ul>
+            </div>
+
+            <div style="margin-top:16px;">
+                <h4 style="margin:0 0 8px;">Rectification examples</h4>
+                <div class="muted" style="margin:0 0 6px;">Example 1: I photographed this image from the side. By applying a homography, I rectify the planar surface and change the perspective so it appears as if viewed straight from the front.</div>
+                <div style="display:grid;grid-template-columns:minmax(0,1fr) 40px minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:center;max-width:1400px;margin:0 auto 16px;">
+                    <figure style="margin:0;">
+                        <img src="/3/a_3/rectified_1/rectify_1.jpeg" alt="Original — Rectified 1" style="width:100%;height:auto;" />
+                        <figcaption class="muted" style="text-align:center;margin-top:6px;">Original 1</figcaption>
+                    </figure>
+                    <div aria-hidden="true" style="text-align:center;font-size:24px;line-height:1;">→</div>
+                    <figure style="margin:0;">
+                        <img src="/3/a_3/rectified_1/rectified_1_nearest.png" alt="Rectified 1 — Nearest" style="width:100%;height:auto;" />
+                        <figcaption class="muted" style="text-align:center;margin-top:6px;">Nearest</figcaption>
+                    </figure>
+                    <figure style="margin:0;">
+                        <img src="/3/a_3/rectified_1/rectified_1_bilinear.png" alt="Rectified 1 — Bilinear" style="width:100%;height:auto;" />
+                        <figcaption class="muted" style="text-align:center;margin-top:6px;">Bilinear</figcaption>
+                    </figure>
+                </div>
+                <div class="muted" style="margin:0 0 6px;">Example 2: I found a sign tilted sideways. It is hard to read like this! After applying my rectification techniqye, the sign is upright and the text is easily readable.</div>
+                <div style="display:grid;grid-template-columns:minmax(0,1fr) 40px minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:center;max-width:1400px;margin:0 auto 16px;">
+                    <figure style="margin:0;">
+                        <img src="/3/a_3/rectified_2/rectify_2.jpeg" alt="Original — Rectified 2" style="width:100%;height:auto;" />
+                        <figcaption class="muted" style="text-align:center;margin-top:6px;">Original 2</figcaption>
+                    </figure>
+                    <div aria-hidden="true" style="text-align:center;font-size:24px;line-height:1;">→</div>
+                    <figure style="margin:0;">
+                        <img src="/3/a_3/rectified_2/rectified_2_nearest.png" alt="Rectified 2 — Nearest" style="width:100%;height:auto;" />
+                        <figcaption class="muted" style="text-align:center;margin-top:6px;">Nearest</figcaption>
+                    </figure>
+                    <figure style="margin:0;">
+                        <img src="/3/a_3/rectified_2/rectified_2_bilinear.png" alt="Rectified 2 — Bilinear" style="width:100%;height:auto;" />
+                        <figcaption class="muted" style="text-align:center;margin-top:6px;">Bilinear</figcaption>
+                    </figure>
+                </div>
+                <div class="muted" style="margin:0 0 6px;">Example 3: I attended the Laver Cup tennis tournament in SF. From this steep angle it’s hard to judge if a ball was in or out. With rectification we get a bird’s‑eye view of the court — no Hawk‑Eye needed!</div>
+                <div style="display:grid;grid-template-columns:minmax(0,1fr) 40px minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:center;max-width:1400px;margin:0 auto;">
+                    <figure style="margin:0;">
+                        <img src="/3/a_3/rectified_3/rectify_3.jpeg" alt="Original — Rectified 3" style="width:100%;height:auto;" />
+                        <figcaption class="muted" style="text-align:center;margin-top:6px;">Original 3</figcaption>
+                    </figure>
+                    <div aria-hidden="true" style="text-align:center;font-size:24px;line-height:1;">→</div>
+                    <figure style="margin:0;">
+                        <img src="/3/a_3/rectified_3/rectified_3_nearest.png" alt="Rectified 3 — Nearest" style="width:100%;height:auto;" />
+                        <figcaption class="muted" style="text-align:center;margin-top:6px;">Nearest</figcaption>
+                    </figure>
+                    <figure style="margin:0;">
+                        <img src="/3/a_3/rectified_3/rectified_3_bilinear.png" alt="Rectified 3 — Bilinear" style="width:100%;height:auto;" />
+                        <figcaption class="muted" style="text-align:center;margin-top:6px;">Bilinear</figcaption>
+                    </figure>
+                </div>
+                <div style="margin-top:16px;">
+                    <h4 style="margin:0 0 8px;">Warping one image into the plane of the other</h4>
+                    <div style="display:grid;grid-template-columns:minmax(0,200px) 40px minmax(0,560px);gap:12px;align-items:center;justify-content:center;">
+                        <figure style="margin:0;">
+                            <img src="/3/a_1/example_1/image_1.jpeg" alt="Source image (before warp)" style="width:100%;height:auto;display:block;max-width:560px;" />
+                            <figcaption class="muted" style="text-align:center;margin-top:6px;">Source image (before warp)</figcaption>
+                        </figure>
+                        <div aria-hidden="true" style="text-align:center;font-size:28px;line-height:1;">→</div>
+                        <figure style="margin:0;">
+                            <img src="/3/a_3/image_1_warped_biliniar.jpeg" alt="Source warped into destination plane (bilinear)" style="width:100%;height:auto;display:block;max-width:560px;" />
+                            <figcaption class="muted" style="text-align:center;margin-top:6px;">Source warped into destination plane (bilinear)</figcaption>
+                        </figure>
+                    </div>
+                </div>
+                <div style="margin-top:16px;">
+                    <h4 style="margin:0 0 8px;">Interpolation comparison</h4>
+                    <div class="muted" style="margin:6px 0 8px;">
+                        You can use the image sliders on this page to directly compare the methods—drag the handle to reveal differences. Bilinear interpolation consistently looked better in my results when comparing to nearest neighbor. When dragging the slider and inspecting the zoomed window, nearest neighbor shows blocky artifacts; straight edges—especially diagonal or slanted lines—break and look less clean. Bilinear is slightly smoother. I can appeach a bit blurrier, but it preserves line continuity and reduces aliasing, so edges and window frames look noticeably cleaner overall.
+                    </div>
+                    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start;">
+                        <div>
+                            <div class="compare" data-compare>
+                                <img class="compare-base" src="/3/a_3/image_1_warped_nearest.jpeg" alt="Warped — Nearest Neighbor" />
+                                <div class="compare-overlay" style="clip-path: inset(0 0 0 50%)">
+                                    <img src="/3/a_3/image_1_warped_biliniar.jpeg" alt="Warped — Bilinear" />
+                                </div>
+                                <div class="compare-handle" style="left:50%"></div>
+                                <span class="compare-label left">Nearest</span>
+                                <span class="compare-label right">Bilinear</span>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="compare compare-zoom" data-compare>
+                                <img class="compare-base" src="/3/a_3/image_1_warped_nearest.jpeg" alt="Zoom — Nearest" />
+                                <div class="compare-overlay" style="clip-path: inset(0 0 0 50%)">
+                                    <img src="/3/a_3/image_1_warped_biliniar.jpeg" alt="Zoom — Bilinear" />
+                                </div>
+                                <div class="compare-handle" style="left:50%"></div>
+                                <span class="compare-label left">Nearest (zoom)</span>
+                                <span class="compare-label right">Bilinear (zoom)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="card glass">
+            <h3>A.4: Blend Images into a Mosaic</h3>
+            <div class="muted" style="margin-bottom:8px;">
+                Now I stich together the warped images into one combined mosiac.
+            </div>
+            <div style="margin-top:8px;">
+
+                <div style="display:grid;grid-template-columns:1fr;gap:12px;align-items:start;">
+                    <div class="muted" style="margin:0 0 4px;">
+                        <div><strong>Step 1 — Reference + inverse mapping</strong></div>
+					<ol style="margin:6px 0 0;padding-left:0;list-style-position:inside;">
+                            <li>Select the <strong>reference image</strong> that defines the final image plane.</li>
+                            <li>For each other image:
+							<ol type="a" style="margin:6px 0 0;padding-left:32px;list-style-position:outside;">
+                                    <li>Estimate its homography <em>H</em> to the reference image.</li>
+                                    <li>Apply <em>H</em> to the <em>corners</em> to know where it lands on the final plane.</li>
+                                    <li>Iterate over integer pixels <em>inside that outline</em> and use the <strong>inverse</strong> mapping <em>H</em><sup>−1</sup> to look up the sub‑pixel source coordinate from the to-be-warped image.</li>
+                                    <li>Sample the source with <strong>bilinear interpolation</strong> (as in A.3, cleaner than nearest).</li>
+                                </ol>
+                            </li>
+                            <li>Compute the global minima and <strong>shift all images tensors together</strong> so the composite canvas is non‑negative and starts at (0,0).</li>
+                        </ol>
+                    </div>
+                    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
+                        <figure style="margin:0;">
+                            <img src="/3/a_4/example_1/image_1_warped_biliniar.png" alt="Example 1 — Image 1 (warped)" style="width:100%;height:auto;" />
+                            <figcaption class="muted" style="text-align:center;margin-top:6px;">Image 1 (warped)</figcaption>
+                        </figure>
+                        <figure style="margin:0;">
+                            <img src="/3/a_4/example_1/image_2_warped_bilinar.png" alt="Example 1 — Image 2 (warped)" style="width:100%;height:auto;" />
+                            <figcaption class="muted" style="text-align:center;margin-top:6px;">Image 2 (warped)</figcaption>
+                        </figure>
+                    </div>
+                    <div class="muted" style="margin:8px 0 4px;">
+                        <div><strong>Step 2 — Seam via intersections</strong></div>
+						<ol style="margin:6px 0 0;padding-left:0;list-style-position:inside;">
+                            <li>For each warped image polygon, use the corners to derive line equations for each edge.</li>
+                            <li>Compute all <strong>intersections</strong> between overlapping polygons; keep the two that lie <strong>inside both shapes</strong>.</li>
+                            <li>Draw the straight line through these two points; this becomes the <em>blend seam</em>.</li>
+                            <li>Build a user‑specified <strong>linear blendline</strong> around the seam to create the fade masks for compositing.</li>
+                        </ol>
+                    </div>
+                    <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;">
+                        <figure style="margin:0;">
+                            <img src="/3/a_4/example_1/intersection_geometry.png" alt="Intersection geometry" style="width:100%;height:auto;" />
+                            <figcaption class="muted" style="text-align:center;margin-top:6px;">Intersection geometry</figcaption>
+                        </figure>
+                        <figure style="margin:0;">
+                            <img src="/3/a_4/example_1/image_1_fade.png" alt="Example 1 — Fade (Image 1)" style="width:100%;height:auto;" />
+                            <figcaption class="muted" style="text-align:center;margin-top:6px;">Fade — Image 1</figcaption>
+                        </figure>
+                        <figure style="margin:0;">
+                            <img src="/3/a_4/example_1/image_2_fade.png" alt="Example 1 — Fade (Image 2)" style="width:100%;height:auto;" />
+                            <figcaption class="muted" style="text-align:center;margin-top:6px;">Fade — Image 2</figcaption>
+                        </figure>
+                    </div>
+                    <div class="muted" style="margin:8px 0 4px;">
+                        <div><strong>Step 3 — Composite with fade masks</strong></div>
+						<ol style="margin:6px 0 0;padding-left:0;list-style-position:inside;">
+                            <li>Using the fade mask, I then finally combine all image tensors into one final mosaic by multiplying each image’s pixels by its mask scale to blend contributions.</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top:12px;">
+                <figure style="margin:0;">
+                    <img src="/3/a_4/example_1/mosaic_clean.jpg" alt="Final mosaic (feathered) — Example 1" style="width:100%;max-width:900px;height:auto;display:block;margin:0 auto;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Final mosaic (feathered)</figcaption>
+                </figure>
+            </div>
+
+            <div style="margin-top:16px;">
+                <h4 style="margin:0 0 8px;">Example 2</h4>
+                <div style="display:grid;grid-template-columns:minmax(0,200px) 40px minmax(0,700px);gap:12px;align-items:center;justify-content:center;">
+                    <div style="display:grid;grid-template-rows:repeat(3,1fr);gap:8px;">
+                        <img src="/3/a_4/example_2/1_image.jpeg" alt="Example 2 — Image 1" style="width:100%;height:100%;object-fit:contain;border-radius:12px;" />
+                        <img src="/3/a_4/example_2/2_image.jpeg" alt="Example 2 — Image 2" style="width:100%;height:100%;object-fit:contain;border-radius:12px;" />
+                        <img src="/3/a_4/example_2/3_image.jpeg" alt="Example 2 — Image 3" style="width:100%;height:100%;object-fit:contain;border-radius:12px;" />
+                    </div>
+                    <div aria-hidden="true" style="text-align:center;font-size:28px;line-height:1;">→</div>
+                    <figure style="margin:0;">
+                        <img src="/3/a_4/example_2/mosaic_clean.jpg" alt="Final mosaic — Example 2" style="width:100%;height:auto;display:block;margin:0 auto;max-width:720px;" />
+                        <figcaption class="muted" style="text-align:center;margin-top:6px;">Final mosaic (feathered) — Example 2</figcaption>
+                    </figure>
+                </div>
+            </div>
+            <div style="margin-top:16px;">
+                <h4 style="margin:0 0 8px;">Example 3</h4>
+                <div style="display:grid;grid-template-columns:minmax(0,200px) 40px minmax(0,700px);gap:12px;align-items:center;justify-content:center;">
+                    <div style="display:grid;grid-template-rows:repeat(3,1fr);gap:8px;">
+                        <img src="/3/a_4/example_3/1_image.jpeg" alt="Example 3 — Image 1" style="width:100%;height:100%;object-fit:contain;border-radius:12px;" />
+                        <img src="/3/a_4/example_3/2_image.jpeg" alt="Example 3 — Image 2" style="width:100%;height:100%;object-fit:contain;border-radius:12px;" />
+                        <img src="/3/a_4/example_3/3_image.jpeg" alt="Example 3 — Image 3" style="width:100%;height:100%;object-fit:contain;border-radius:12px;" />
+                    </div>
+                    <div aria-hidden="true" style="text-align:center;font-size:28px;line-height:1;">→</div>
+                    <figure style="margin:0;">
+                        <img src="/3/a_4/example_3/mosaic_clean.jpg" alt="Final mosaic — Example 3" style="width:100%;height:auto;display:block;margin:0 auto;max-width:720px;" />
+                        <figcaption class="muted" style="text-align:center;margin-top:6px;">Final mosaic (feathered) — Example 3</figcaption>
+                    </figure>
+                </div>
+            </div>
+        </section>
+
+		<section class="card glass">
+			<h3>A.5: Bells &amp; Whistles</h3>
+			<div class="muted" style="margin-bottom:8px;">
+				<strong>Cylindrical projection</strong>: the camera rotates in place, so each image column corresponds to a viewing <em>direction</em> rather than a position. I map the image on a virtual cylinder wrapped around the camera and then “unroll” that cylinder to a flat canvas. Intuitively, the horizontal axis becomes the <em>angle</em> which the camera turned (so that theseams align naturally), while the vertical axis is slightly adjusted to avoid stretching. Using the focal length to convert pixels to angles (e.g., \(\theta = (x-\,c_x)/f\)) keeps vertical lines upright and removes the strong perspective squeeze that would otherwise appear at the edges of my panorama. 
+			</div>
+			<div class="muted" style="margin:8px 0 12px;">
+				<strong>Formulas I used</strong> (principal point \((c_x,c_y)\), focal length \(f\)):
+				<div style="margin-top:6px;">
+					Unroll plane → cylinder (compute cylinder coords \((u,v)\) from image pixel \((x,y)\)):
+					\[
+					\theta = \arctan\!\Big(\frac{x - c_x}{f}\Big),\quad
+					u = c_x + f\,\theta,\quad
+					v = c_y + \frac{y - c_y}{\cos\theta}.
+					\]
+					Sample back cylinder → plane (map canvas \((u,v)\) to source \((x,y)\) for bilinear lookup):
+					\[
+					\theta = \frac{u - c_x}{f},\quad
+					x = c_x + f\,\tan\theta,\quad
+					y = c_y + (v - c_y)\,\cos\theta.
+					\]
+				</div>
+				<div style="margin-top:6px;">
+					This reparameterization makes yaw rotations look more like horizontal shifts on the cylinder. It thereby reduces perspective squeeze at wide fields of view while preserving verticals. I then align the warped views on a common canvas and blend overlaps with the same technique as in the previous section.
+				</div>
+			</div>
+			<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start;max-width:1200px;margin:0 auto;">
+				<figure style="margin:0;">
+					<img src="/3/a_5/cylindrical_mosaic_set_2.jpg" alt="Cylindrical mosaic — set 2" style="width:100%;height:auto;" />
+					<figcaption class="muted" style="text-align:center;margin-top:6px;">Cylindrical mosaic — set 2 (f=1200)</figcaption>
+				</figure>
+				<figure style="margin:0;">
+					<img src="/3/a_5/cylindrical_mosaic_set_3.jpg" alt="Cylindrical mosaic — set 3" style="width:100%;height:auto;" />
+					<figcaption class="muted" style="text-align:center;margin-top:6px;">Cylindrical mosaic — set 3 (f=1400)</figcaption>
+				</figure>
+			</div>
+		</section>
+
+		<section class="card glass">
+			<h3>B.1: Harris Corner Detection and ANMS</h3>
+			<div class="muted" style="margin-bottom:8px;">
+				Here, as advised, I foolow the approach from “Multi‑Image Matching using Multi‑Scale Oriented Patches”. he pipeline begins with <strong>Harris</strong> interest points before selection by ANMS.
+				Harris detects points where intensity changes strongly in <em>two orthogonal directions</em>. Using image gradients \(I_x, I_y\) and a Gaussian window \(G_\sigma\), we build the <strong>second‑moment matrix</strong>
+				\[
+				M = G_\sigma * \begin{bmatrix} I_x^2 & I_x I_y \\ I_x I_y & I_y^2 \end{bmatrix}.
+				\]
+				The <strong>Harris response</strong> scores corners as shown in the equation below.
+				\[
+				R = \det(M) - k\,\mathrm{tr}(M)^2,\quad k \in [0.04, 0.06].
+				\]
+				
+				Only points whose the Harris response was strictly greater than all neighbors were used and are visible in the Figure below.
+			</div>
+			<div class="muted" style="margin:8px 0;">Note: I used the provided <code>harris.py</code> script for the Harris corner detection step; it handled the first part.</div>
+			<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start;">
+				<figure style="margin:0;">
+					<img src="/3/b_1/example_1/harris_all.png" alt="Harris corners — thresholded local maxima" style="width:100%;height:auto;" />
+					<figcaption class="muted" style="text-align:center;margin-top:6px;">Harris corners (after threshold + local maxima)</figcaption>
+				</figure>
+				<figure style="margin:0;">
+					<img src="/3/b_1/example_1/harris_anms.png" alt="Corners after ANMS" style="width:100%;height:auto;" />
+					<figcaption class="muted" style="text-align:center;margin-top:6px;">Corners after ANMS (well‑spaced, high‑quality)</figcaption>
+				</figure>
+			</div>
+			<div class="muted" style="margin:12px 0 8px;">
+				<h4 style="margin:0 0 6px;">Adaptive Non‑Maximal Suppression (ANMS)</h4>
+				Harris responses are pruned with <strong>ANMS</strong> to obtain spatially uniform and high‑quality keypoints. We assign each candidate a <em>suppression radius</em> using its strength \(f(\mathbf{x})\):
+				\[
+				r_i = \min_j \; \|\,\mathbf{x}_i - \mathbf{x}_j\,\| \quad \text{s.t.}\quad f(\mathbf{x}_i) < c_{\text{robust}}\, f(\mathbf{x}_j),\; \mathbf{x}_j \in \mathcal{I}.
+				\]
+				I use \(c_{\text{robust}} \approx 0.9\). Points with no stronger neighbor receive a large sentinel radius (e.g., image diagonal). Finally, I select the <strong>top‑K</strong> largest radii (K≈500) as the keypoints from ANMS.
+			</div>
+			
+        </section>
+
+		
+
+        <section class="card glass">
+            <h3>B.2: Feature Descriptor Extraction</h3>
+			<div class="muted" style="margin-bottom:8px;">
+				Next, I follow <strong>MOPS</strong> approach: sample a normalized intensity patch around each ANMS keypoint. The original work proposes multi‑scale oriented patches; here I adopt the same spirit with a single‑scale variant (and later in the Bells & Whisltes also implement a multi‑scale variant)
+				<ul style="margin:6px 0;">
+					<li>Use the top‑K keypoints from B.1 (Harris + ANMS; K≈500).</li>
+					<li>Theextract a 40×40 patch around each keypoint.</li>
+					<li>Resample each cntext window bilinear from 40×40 to 8×8.</li>
+					<li>Flatten to 64‑D and apply bias/gain normalization \((v - \mu)/\sigma\) to reduce lighting effects, as advocated by the paper.</li>
+				</ul>
+				This yields compact, blur‑tolerant descriptors. Below are the selected keypoints and their normalized 8×8 patches.
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start;">
+                <figure style="margin:0;">
+                    <img src="/3/b_2/harris_anms.png" alt="Chosen corners (ANMS) used for descriptors" style="width:100%;height:auto;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Chosen corners (ANMS) — sampling centers</figcaption>
+                </figure>
+                <figure style="margin:0;">
+                    <img src="/3/b_2/descriptors_grid.png" alt="Grid of normalized 8x8 descriptors" style="width:100%;height:auto;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Normalized 8×8 descriptors sampled from 40×40 windows</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="card glass">
+            <h3>B.3: Feature Matching</h3>
+			<div class="muted" style="margin-bottom:8px;">
+				Following the matching strategy common to MOPS/SIFT pipelines, I compare descriptors with squared Euclidean distance and apply <strong>Lowe's ratio test</strong>.
+				Given two descriptor sets \(\{\mathbf{d}_i\}_{i=1}^{N_1}\) and \(\{\mathbf{d}'_j\}_{j=1}^{N_2}\), I compute the full distance matrix efficiently via
+				\[
+				D_{ij} = \|\mathbf{d}_i - \mathbf{d}'_j\|_2^2 = \|\mathbf{d}_i\|_2^2 + \|\mathbf{d}'_j\|_2^2 - 2\, \mathbf{d}_i^\top \mathbf{d}'_j.
+				\]
+				<div class="muted" style="margin:6px 0 0;">I build a full <strong>distance matrix</strong>: each row corresponds to one feature in image 1, and each column to one feature in image 2. Entry \(D_{ij}\) is the distance from feature <em>i</em> to feature <em>j</em> in the other image.</div>
+				For each \(i\), let \(d_1\) and \(d_2\) be the smallest and second‑smallest distances in row \(i\) (best and runner‑up). The ratio test keeps a match only if
+				\[
+				r_i = \frac{d_1}{d_2} < \tau, \quad \text{with } \tau\approx 0.65.
+				\]
+				<div class="muted" style="margin:6px 0 0;">
+					Ref: Figure 6b in Brown–Szeliski–Winder suggests ~<strong>0.65</strong> as a sweet spot: above this, <em>incorrect</em> matches dominate; below this, <em>correct</em> matches dominate.
+				</div>
+
+			</div>
+            <figure style="margin:0;">
+                <img src="/3/b_3/matches.png" alt="Descriptor matches visualization" style="width:100%;height:auto;" />
+                <figcaption class="muted" style="text-align:center;margin-top:6px;">Matched features across the image pair</figcaption>
+            </figure>
+        </section>
+
+        <section class="card glass">
+            <h3>B.4: RANSAC for Robust Homography</h3>
+			<div class="muted" style="margin-bottom:8px;">
+				Given tentative matches from B.3, I estimate a <strong>projective homography</strong> with RANSAC.
+				In homogeneous coordinates, corresponding points satisfy
+				\[
+				\tilde{\mathbf{x}}_2 \;\sim\; H\,\tilde{\mathbf{x}}_1,\qquad \tilde{\mathbf{x}} = [x\;y\;1]^\top,\; H \in \mathbb{R}^{3\times 3}.
+				\]
+				After dehomogenization (divide by the third component), I score using the <strong>symmetric transfer error</strong>
+				\[
+				E_i = \big\|\mathbf{x}_2^{(i)} - \pi(H\,\tilde{\mathbf{x}}_1^{(i)})\big\|_2^2\; +\; \big\|\mathbf{x}_1^{(i)} - \pi(H^{-1}\,\tilde{\mathbf{x}}_2^{(i)})\big\|_2^2,
+				\]
+				where \(\pi([X\;Y\;Z]^\top) = [X/Z\;Y/Z]^\top\). A correspondence is an <em>inlier</em> if \(E_i < \tau^2\) (here \(\tau\approx 3\) px).
+				The algorithm:
+				<ul style="margin:6px 0;">
+					<li>Sample 4 matches uniformly; compute a candidate \(H\) from the minimal set.</li>
+					<li>Score by counting inliers under the symmetric transfer error threshold.</li>
+					<li>Keep the best model (max inliers) over <em>T</em> iterations.</li>
+					<li>Refit \(H\) using <em>all</em> inliers from the best model for the final estimate.</li>
+				</ul>
+				Below I color matches by RANSAC outcome (green=inliers, red=outliers).
+			</div>
+            <div style="display:grid;grid-template-columns:1fr;gap:12px;align-items:start;max-width:900px;margin:0 auto;">
+                <figure style="margin:0;">
+                    <img src="/3/b_4/ransac_matches_all.png" alt="All matches before RANSAC" style="width:100%;height:auto;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">All matches (pre-RANSAC)</figcaption>
+                </figure>
+                <figure style="margin:0;">
+                    <img src="/3/b_4/ransac_matches_inliers.png" alt="Inlier matches after RANSAC" style="width:100%;height:auto;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Cleaned matches (RANSAC inliers)</figcaption>
+                </figure>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start;max-width:1200px;margin:12px auto 0;">
+                <figure style="margin:0;">
+                    <img src="/3/b_4/ransac_matches_inliers_2.png" alt="Inlier matches after RANSAC — Example 2" style="width:100%;height:auto;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Cleaned matches — Example 2</figcaption>
+                </figure>
+                <figure style="margin:0;">
+                    <img src="/3/b_4/ransac_matches_inliers_3.png" alt="Inlier matches after RANSAC — Example 3" style="width:100%;height:auto;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Cleaned matches — Example 3</figcaption>
+                </figure>
+            </div>
+            <div style="margin-top:16px;">
+                <h4 style="margin:0 0 8px;">Manual vs RANSAC mosaics</h4>
+                <div style="display:grid;grid-template-columns:minmax(0,1fr) 40px minmax(0,1fr);gap:12px;align-items:center;">
+                    <figure style="margin:0;">
+                        <img src="/3/b_4/example_1/mosaic_clean-manual.jpg" alt="Example 1 — Manual mosaic" style="width:100%;height:auto;display:block;" />
+                        <figcaption class="muted" style="text-align:center;margin-top:6px;">Example 1 — Manual</figcaption>
+                    </figure>
+                    <div aria-hidden="true" style="text-align:center;font-size:28px;line-height:1;">→</div>
+                    <figure style="margin:0;">
+                        <img src="/3/b_4/example_1/mosaic_clean-ransac.jpg" alt="Example 1 — RANSAC mosaic" style="width:100%;height:auto;display:block;" />
+                        <figcaption class="muted" style="text-align:center;margin-top:6px;">Example 1 — RANSAC</figcaption>
+                    </figure>
+                </div>
+                <div style="display:grid;grid-template-columns:minmax(0,1fr) 40px minmax(0,1fr);gap:12px;align-items:center;margin-top:12px;">
+                    <figure style="margin:0;">
+                        <img src="/3/b_4/example_2/mosaic_clean-manual.jpg" alt="Example 2 — Manual mosaic" style="width:100%;height:auto;display:block;" />
+                        <figcaption class="muted" style="text-align:center;margin-top:6px;">Example 2 — Manual</figcaption>
+                    </figure>
+                    <div aria-hidden="true" style="text-align:center;font-size:28px;line-height:1;">→</div>
+                    <figure style="margin:0;">
+                        <img src="/3/b_4/example_2/mosaic_clean-ransac.jpg" alt="Example 2 — RANSAC mosaic" style="width:100%;height:auto;display:block;" />
+                        <figcaption class="muted" style="text-align:center;margin-top:6px;">Example 2 — RANSAC</figcaption>
+                    </figure>
+                </div>
+                <div style="display:grid;grid-template-columns:minmax(0,1fr) 40px minmax(0,1fr);gap:12px;align-items:center;margin-top:12px;">
+                    <figure style="margin:0;">
+                        <img src="/3/b_4/example_3/mosaic_clean-manual.jpg" alt="Example 3 — Manual mosaic" style="width:100%;height:auto;display:block;" />
+                        <figcaption class="muted" style="text-align:center;margin-top:6px;">Example 3 — Manual</figcaption>
+                    </figure>
+                    <div aria-hidden="true" style="text-align:center;font-size:28px;line-height:1;">→</div>
+                    <figure style="margin:0;">
+                        <img src="/3/b_4/example_3/mosaic_clean-ransac.jpg" alt="Example 3 — RANSAC mosaic" style="width:100%;height:auto;display:block;" />
+                        <figcaption class="muted" style="text-align:center;margin-top:6px;">Example 3 — RANSAC</figcaption>
+                    </figure>
+                </div>
+					<div class="muted" style="margin-top:8px;">
+						Overall, the RANSAC‑based approach outperformed my manual correspondence picks. If you closely inspect the blending regions—for example, in <strong>Set 3</strong> near the bottom middle where all three images intersect—the manual mosaic looks noticeably <em>blurrier</em>, whereas the RANSAC result remains <em>clean</em> and well‑aligned.
+					</div>
+            </div>
+        </section>
+
+        <section class="card glass">
+            <h3>B.5: Multiscale Feature Detection and Matching</h3>
+            <div class="muted" style="margin-bottom:8px;">
+                Building on B.1–B.4, I make the pipeline <em>scale‑aware</em> with a pyramid: at each level I run <strong>Harris</strong> (B.1) → <strong>ANMS</strong> (B.1) → MOPS‑style <strong>8×8 descriptors</strong> (B.2), then match with <strong>Lowe’s ratio</strong> and optional mutual check (B.3). I estimate a <strong>homography with RANSAC</strong> (B.4) and show all matches vs. inliers.
+                <div class="muted" style="margin-top:6px;">
+                    How the pyramid works (simple):
+                    <ul style="margin:6px 0 0;padding-left:18px;">
+                        <li>Start from the original grayscale image; repeatedly downscale by a factor (f.e. 0.75).</li>
+                        <li>At each level, run Harris + ANMS and extract 40×40 → 8×8 normalized patches.</li>
+                        <li>Convert keypoints to original coordinates by dividing by the level’s scale and record the detection scale.</li>
+                        <li>Concatenate features from all levels, perform matching once, then run RANSAC.</li>
+                    </ul>
+                </div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start;max-width:1200px;margin:0 auto;">
+                <figure style="margin:0;">
+                    <img src="/3/b_5/multiscale_keypoints_img1.png" alt="Multiscale keypoints — Image 1" style="width:100%;height:auto;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Multiscale keypoints — Image 1</figcaption>
+                </figure>
+                <figure style="margin:0;">
+                    <img src="/3/b_5/multiscale_keypoints_img2.png" alt="Multiscale keypoints — Image 2" style="width:100%;height:auto;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Multiscale keypoints — Image 2</figcaption>
+                </figure>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start;max-width:1200px;margin:12px auto 0;">
+                <figure style="margin:0;">
+                    <img src="/3/b_5/multiscale_matches_all.png" alt="All multiscale matches (colored by inlier/outlier)" style="width:100%;height:auto;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">All matches (green=inliers by RANSAC, red=outliers)</figcaption>
+                </figure>
+                <figure style="margin:0;">
+                    <img src="/3/b_5/multiscale_matches_inliers.png" alt="Multiscale matches — inliers only" style="width:100%;height:auto;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Inliers only (RANSAC)</figcaption>
+                </figure>
+            </div>
+            <div style="margin-top:12px;max-width:1000px;margin-left:auto;margin-right:auto;">
+                <div class="muted" style="margin:0 0 8px;text-align:center;">Final mosaic using multiscale features + RANSAC — it looks very lean with the multiscale approach.</div>
+                <figure style="margin:0;">
+                    <img src="/3/b_5/mosaic_clean_multiscale_ransac.jpg" alt="Final mosaic — multiscale + RANSAC" style="width:100%;height:auto;" />
+                    <figcaption class="muted" style="text-align:center;margin-top:6px;">Final mosaic (multiscale + RANSAC)</figcaption>
+                </figure>
+            </div>
+        </section>
+
+    </div>
+    <div id="lightbox" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.85);z-index:9999;">
+        <button aria-label="Close" style="position:absolute;top:12px;right:12px;background:rgba(255,255,255,0.9);border:0;border-radius:999px;width:32px;height:32px;cursor:pointer;font-size:18px;line-height:32px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.2);">×</button>
+        <img id="lightbox-img" alt="Expanded" style="max-width:95vw;max-height:95vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.35);" />
+    </div>
+    <script>
+    (function(){
+        function init(el){
+            var overlay = el.querySelector('.compare-overlay');
+            var handle = el.querySelector('.compare-handle');
+            if(!overlay || !handle) return;
+            var dragging = false;
+            function setX(clientX){
+                var r = el.getBoundingClientRect();
+                var pct = (clientX - r.left) / r.width;
+                if (pct < 0) pct = 0; if (pct > 1) pct = 1;
+                var perc = (pct*100).toFixed(2) + '%';
+                overlay.style.clipPath = 'inset(0 0 0 calc(' + perc + '))';
+                handle.style.left = perc;
+            }
+            function onDown(e){ dragging = true; e.preventDefault(); }
+            function onMove(e){ if(!dragging) return; setX(e.clientX || (e.touches && e.touches[0].clientX)); }
+            function onUp(){ dragging = false; }
+            handle.addEventListener('mousedown', onDown);
+            window.addEventListener('mousemove', onMove);
+            window.addEventListener('mouseup', onUp);
+            handle.addEventListener('touchstart', onDown, {passive:false});
+            window.addEventListener('touchmove', onMove, {passive:false});
+            window.addEventListener('touchend', onUp);
+            el.addEventListener('click', function(e){ setX(e.clientX); });
+        }
+        document.querySelectorAll('[data-compare]').forEach(init);
+    })();
+    </script>
+    <script>
+    (function(){
+        var lightbox = document.getElementById('lightbox');
+        var lightboxImg = document.getElementById('lightbox-img');
+        var closeBtn = lightbox && lightbox.querySelector('button');
+        if(!lightbox || !lightboxImg || !closeBtn) return;
+
+        function openLightbox(src, alt){
+            lightboxImg.src = src;
+            lightboxImg.alt = alt || '';
+            lightbox.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+        function closeLightbox(){
+            lightbox.style.display = 'none';
+            lightboxImg.src = '';
+            document.body.style.overflow = '';
+        }
+
+        closeBtn.addEventListener('click', function(e){ e.stopPropagation(); closeLightbox(); });
+        lightbox.addEventListener('click', function(e){ if(e.target === lightbox) closeLightbox(); });
+        document.addEventListener('keydown', function(e){ if(lightbox.style.display !== 'none' && (e.key === 'Escape' || e.key === 'Esc')) closeLightbox(); });
+
+        Array.prototype.forEach.call(document.querySelectorAll('img'), function(img){
+            img.style.cursor = 'zoom-in';
+            img.addEventListener('click', function(e){
+                // Ignore clicks on the lightbox image itself
+                if (img === lightboxImg) return;
+                openLightbox(img.currentSrc || img.src, img.alt);
+            });
+        });
+    })();
+    </script>
+</body>
+</html>

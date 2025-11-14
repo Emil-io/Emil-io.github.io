@@ -179,7 +179,7 @@
                 <li>Used <code>cv2.solvePnP</code> with detected corners and intrinsics to recover pose.</li>
                 <li>Converted to camera-to-world matrices for visualization and later parts.</li>
                 <li>Visualized camera frustums in 3D in Viser.</li>
-                <li>Undistorted images with <code>cv2.undistort</code> (and optionally used an optimal new camera matrix).</li>
+                <li>Undistorted images with <code>cv2.undistort</code> (later, I skipped the undistort step, as this yielded better results).</li>
                 <li>Using recovered intrinsics and poses (<code>c2w</code>), I packaged everything into a final <code>.npz</code> dataset for training.</li>
             </ul>
             
@@ -198,8 +198,8 @@
                         <p class="legend" style="text-align: center;">Camera frustums and sampled rays</p>
                     </div>
                     <div class="figcol">
-                        <img class="expandable" src="./0/viser/samples.png" alt="3D visualization of points sampled along rays">
-                        <p class="legend" style="text-align: center;">Points sampled along rays</p>
+                        <img class="expandable" src="./0/viser/samples.png" alt="3D visualization of points sampled along rays with origin at ArUco tag corner">
+                        <p class="legend" style="text-align: center;">Sample points along rays for NeRF training. Origin visible at ArUco tag corner.</p>
                     </div>
                 </div>
             </div>
@@ -225,7 +225,7 @@
                 <p class="legend">MLP with positional encoding and a skip connection.</p>
             </div>
             <ul style="max-width: 840px; margin: 0 auto; text-align: left;">
-                <li>Implemented an MLP with sinusoidal positional encoding to map 2D coords → RGB.</li>
+                <li>Implemented an MLP with sinusoidal positional encoding to map 2D coords → RGB in PyTorch.</li>
                 <li>Used a random pixel sampling dataloader; trained with MSE (Adam 1e-2).</li>
                 <li>Reported PSNR and tuned width and max PE frequency.</li>
             </ul>
@@ -250,6 +250,12 @@
             <div class="figure" style="margin-top: 20px;">
                 <h3 style="margin: 0 0 8px;">Example: Training progression</h3>
                 <p class="legend">Resolution: Pixel Width: 1.024, Pixel Height: 689.</p>
+                <div class="figrow" style="margin-bottom: 12px;">
+                    <div class="figcol">
+                        <img class="expandable" src="./1/example/input.jpg" alt="Example input image">
+                        <p class="legend">Input image</p>
+                    </div>
+                </div>
                 <div class="figrow">
                     <div class="figcol">
                         <img class="expandable" src="./1/example/recon_step_00001.png" alt="Example training progression at step 1">
@@ -291,6 +297,12 @@
             <div class="figure" style="margin-top: 20px;">
                 <h3 style="margin: 0 0 8px;">Yosemite: Training progression</h3>
                 <p class="legend">Resolution: Pixel Width: 2.075, Pixel Height: 1.177.</p>
+                <div class="figrow" style="margin-bottom: 12px;">
+                    <div class="figcol">
+                        <img class="expandable" src="./1/yosemite/input.jpg" alt="Yosemite input image">
+                        <p class="legend">Input image</p>
+                    </div>
+                </div>
                 <div class="figrow">
                     <div class="figcol">
                         <img class="expandable" src="./1/yosemite/recon_step_00001.png" alt="Yosemite training progression at step 1">
@@ -343,10 +355,10 @@
                     Top-left: w32_L2 • Top-right: w32_L4 • Bottom-left: w64_L2 • Bottom-right: w64_L4
                 </p>
                 <p style="max-width: 840px; margin: 8px auto 0; text-align: left;">
-                    The results show that both the positional encoding frequency <strong>L</strong> and the network width <strong>W</strong> matter.
-                    When either is too small, the model lacks frequency coverage and capacity, which yields overly smooth/blurry reconstructions.
-                    Increasing <strong>L</strong> allows the network to represent higher-frequency detail (less blur), and increasing <strong>W</strong>
-                    provides more parameters, improving capacity and overall image fidelity.
+                    The findings indicate that the network width <strong>W</strong> and the positional encoding frequency <strong>L</strong> are both significant.
+                    Reconstructions that are excessively smooth or blurry result from the model's lack of frequency coverage and capacity when either is too small.
+                    Increasing <strong>W</strong> gives the network more parameters, increasing capacity and overall image fidelity, and increasing <strong>L</strong>
+                    enables the network to represent higher-frequency detail (less blur).
                 </p>
             </div>
         </div>
@@ -355,15 +367,25 @@
             <h2 style="margin-top: 0;">Part 2: Fit a Neural Radiance Field from Multi-view Images</h2>
             <h3 id="part-2-1" style="margin-top: 24px;">Part 2.1: Create Rays from Cameras</h3>
             <p style="max-width: 840px; margin: 0 auto; text-align: left;">
-                Implemented camera/world transforms, pixel→camera, and pixel→ray functions.
+                Implemented the full camera/ray geometry pipeline and data loading used throughout NeRF:
             </p>
+            <ul style="max-width: 840px; margin: 8px auto 0; text-align: left;">
+                <li>Loaded a <code>.npz</code> dataset via <code>numpy.load</code>, extracted <code>images_train</code>, <code>c2ws_train</code>, and <code>focal</code>, and normalized images to <code>[0,1]</code> <code>float32</code>.</li>
+                <li>Converted camera-space points to world space using homogeneous coordinates and batched matrix multiply, then divided by <em>w</em> with a small clamp for stability.</li>
+                <li>Inverted the pinhole model with <code>K^{-1}[u,v,1]^T</code> (depth scale <em>s</em> applied afterward), precomputing <code>K^{-1}</code> and building homogeneous <code>[u,v,1]</code> per pixel.</li>
+                <li>Ray origin is the camera center (<code>c2w[:3,3]</code>). Pixels are mapped to world-space points at unit depth, then <code>ray_d = normalize(x_w − ray_o)</code>, with everything fully batched.</li>
+            </ul>
             <h3 id="part-2-2" style="margin-top: 24px;">Part 2.2: Sampling</h3>
             <p style="max-width: 840px; margin: 0 auto; text-align: left;">
-                Sampled rays across images and sampled points along rays with perturbation.
+                Sampled both rays and 3D points along each ray:
             </p>
+            <ul style="max-width: 840px; margin: 8px auto 0; text-align: left;">
+                <li>An infinite generator returns batches of <code>(ray_o, ray_d, pixel_color)</code>. Randomly sampled image indices and pixel coordinates, gathered RGB targets, selected per-pixel <code>K</code> and <code>c2w</code>, and called pixel→ray to get batched origins and directions.</li>
+                <li>Used stratified sampling between <code>[near, far]</code> with <code>num_samples</code> bins. With perturbation, added uniform noise within each interval and returned the 3D points, unit directions, and <code>step_size = (far − near)/num_samples</code>.</li>
+            </ul>
             <h3 id="part-2-3" style="margin-top: 24px;">Part 2.3: Putting the Dataloading All Together</h3>
             <p style="max-width: 840px; margin: 0 auto; text-align: left;">
-                My dataloader returns ray origins, directions, and pixel colors and includes utilities to visualize with cameras.
+                The combined pipeline produces per-batch ray origins/directions and colors, and I added a small visualization script (Viser) to render cameras, rays, and sampled 3D points for sanity checks.
             </p>
             <div class="figure">
                 <div class="figrow">
@@ -379,8 +401,14 @@
             </div>
             <h3 id="part-2-4" style="margin-top: 24px;">Part 2.4: Neural Radiance Field</h3>
             <p style="max-width: 840px; margin: 0 auto; text-align: left;">
-                MLP takes encoded 3D coords and view dirs; outputs density and color. Deeper network with skip.
+                Implemented a NeRF-style MLP conditioned on positional encodings of 3D points and view directions:
             </p>
+            <ul style="max-width: 840px; margin: 8px auto 0; text-align: left;">
+                <li>Used sin/cos bands with frequencies <code>2^k π</code>, concatenated with the input. Separate levels for positions and directions.</li>
+                <li>A stack of fully-connected layers (configurable depth/width) with a skip connection that concatenates the encoded position mid‑network.</li>
+                <li>Mapped hidden features to <code>σ</code> via <code>softplus</code> (with positive bias) for stable, non‑negative densities.</li>
+                <li>Produced a feature, concatenated encoded view direction, and output RGB with <code>sigmoid</code> to constrain <code>[0,1]</code>.</li>
+            </ul>
             <div class="figure" style="margin-top: 20px;">
                 <h3 style="margin: 0 0 8px;">NeRF Model Architecture</h3>
                 <div style="text-align: center;">
@@ -398,8 +426,13 @@
             </p>
             <h3 id="part-2-5" style="margin-top: 24px;">Part 2.5: Volume Rendering</h3>
             <p style="max-width: 840px; margin: 0 auto; text-align: left;">
-                Implemented differentiable volume rendering in Torch and verified against the provided test.
+                Implemented the discrete volumetric rendering equations in PyTorch for color, depth, and opacity:
             </p>
+            <ul style="max-width: 840px; margin: 8px auto 0; text-align: left;">
+                <li>Given per-sample densities σ<sub>i</sub> and colors c<sub>i</sub> with uniform Δ, computed α<sub>i</sub> = 1 − exp(−σ<sub>i</sub> Δ) and transmittance T<sub>i</sub> = exp(−∑<sub>j&lt;i</sub> σ<sub>j</sub> Δ). The weights are w<sub>i</sub> = T<sub>i</sub> α<sub>i</sub> and the rendered color is ∑ w<sub>i</sub> c<sub>i</sub>.</li>
+                <li>Reused the same weights to compute accumulated opacity acc = ∑ w<sub>i</sub> and expected depth ∑ w<sub>i</sub> t<sub>i</sub> / max(acc, ε).</li>
+                <li>Used exclusive cumulative sums for T<sub>i</sub>, included shape checks, and ensured full differentiability.</li>
+            </ul>
             
             <div class="figure" style="margin-top: 20px;">
                 <h3 style="margin: 0 0 8px;">Hyperparameters (Lego NeRF)</h3>
@@ -467,13 +500,22 @@
             <div class="figure">
                 <h3 style="margin: 12px 0 8px;">Lego: Spherical rendering (10,000 iterations)</h3>
                 <div style="text-align: center;">
-                    <img class="expandable" src="./2/lego/spin.gif" alt="Lego spherical rendering after 10,000 iterations" style="max-width: 720px; width: 100%; height: auto; display: block; margin: 0 auto;">
+                    <img class="expandable" src="./2/lego/spin.gif" alt="Lego spherical rendering after 10,000 iterations" style="max-width: 480px; width: 100%; height: auto; display: block; margin: 0 auto;">
                 </div>
                 <p class="legend" style="text-align: center;">Rendered with provided test camera extrinsics after 10,000 iterations.</p>
             </div>
             <h3 id="part-2-6" style="margin-top: 24px;">Part 2.6: Training with your own data</h3>
             <p style="max-width: 840px; margin: 0 auto; text-align: left;">
+                Training ties all components together: per‑step I sample rays and 3D points, run the NeRF, volume‑render, compute MSE against ground‑truth pixels, and optimize with Adam. I log PSNR (<code>−10 log10(MSE)</code>), periodically render full images (with optional depth/opacity), and save checkpoints.
+            </p>
+            <p style="max-width: 840px; margin: 0 auto; text-align: left;">
                 I trained a NeRF on my Part 0 dataset, rendered a circling camera GIF, and tracked loss with intermediate renders.
+            </p>
+            <p style="max-width: 840px; margin: 8px auto 0; text-align: left;">
+                During training, the <strong>training</strong> MSE continued to decrease while the <strong>validation</strong> error largely stagnated.
+                This behavior is consistent with the earlier observation that my calibration is not perfectly accurate—validation rays are evaluated under slightly
+                mismatched intrinsics/poses. Even though the validation curves did not keep improving, the rendered reconstructions still looked progressively
+                better to a human observer, suggesting that the model was learning a useful representation of the scene despite these imperfections.
             </p>
             <p style="max-width: 840px; margin: 8px auto 0; text-align: left;">
                 I rescaled images to a width of <strong>800 px</strong> and scaled the camera intrinsics accordingly.
@@ -496,8 +538,6 @@
                         <tr><td>far</td><td><code>0.6</code></td></tr>
                         <tr><td>batch_rays</td><td><code>8000</code></td></tr>
                         <tr><td>num_samples</td><td><code>64</code></td></tr>
-                        <tr><td>eval_every</td><td><code>200</code></td></tr>
-                        <tr><td>ckpt_every</td><td><code>1000</code></td></tr>
                         <tr><td>width</td><td><code>512</code></td></tr>
                         <tr><td>depth</td><td><code>8</code></td></tr>
                         <tr><td>skip_layer</td><td><code>4</code></td></tr>
@@ -513,6 +553,46 @@
                     <strong>width</strong> to provide more capacity. In short: more pixels → more high‑frequency content → higher PE,
                     and denser 3D sampling → a wider MLP to faithfully represent the added detail.
                 </p>
+            </div>
+            <div class="figure" style="margin-top: 20px;">
+                <h3 style="margin: 0 0 8px; text-align: center;">Own dataset: Training progression</h3>
+                <div class="figrow">
+                    <div class="figcol">
+                        <img class="expandable" src="./2/shoe/recon_step_00001-3.png" alt="Own dataset (shoe) training progression at step 1">
+                        <p class="legend">Step 1</p>
+                    </div>
+                    <div class="figcol">
+                        <img class="expandable" src="./2/shoe/recon_step_00200-7.png" alt="Own dataset (shoe) training progression at step 200">
+                        <p class="legend">Step 200</p>
+                    </div>
+                    <div class="figcol">
+                        <img class="expandable" src="./2/shoe/recon_step_00400-8.png" alt="Own dataset (shoe) training progression at step 400">
+                        <p class="legend">Step 400</p>
+                    </div>
+                    <div class="figcol">
+                        <img class="expandable" src="./2/shoe/recon_step_01400-5.png" alt="Own dataset (shoe) training progression at step 1400">
+                        <p class="legend">Step 1400</p>
+                    </div>
+                    <div class="figcol">
+                        <img class="expandable" src="./2/shoe/recon_step_04000-5.png" alt="Own dataset (shoe) training progression at step 4000">
+                        <p class="legend">Step 4000</p>
+                    </div>
+                    <div class="figcol">
+                        <img class="expandable" src="./2/shoe/recon_step_10000-2.png" alt="Own dataset (shoe) training progression at step 10000">
+                        <p class="legend">Step 10000</p>
+                    </div>
+                </div>
+                <h3 style="margin: 20px 0 8px; text-align: center;">Own dataset: PSNR and MSE curves</h3>
+                <div class="figrow">
+                    <div class="figcol">
+                        <img class="expandable" src="./2/shoe/psnr_curve-15.png" alt="Own dataset (shoe) PSNR curves over iterations">
+                        <p class="legend">PSNR over iterations (train/val)</p>
+                    </div>
+                    <div class="figcol">
+                        <img class="expandable" src="./2/shoe/mse_curve-3.png" alt="Own dataset (shoe) MSE curves over iterations">
+                        <p class="legend">MSE over iterations (train/val)</p>
+                    </div>
+                </div>
             </div>
             <div class="figure">
                 <h3 style="margin: 12px 0 8px; text-align: center;">Own dataset: Shoe novel views</h3>

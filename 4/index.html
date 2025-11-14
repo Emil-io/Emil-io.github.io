@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <title>Project 4</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -64,6 +64,38 @@
         }
         .card { padding: 40px; margin: 20px 0; text-align: center; }
         img { border-radius: 12px; max-width: 100%; height: auto; }
+        .figure { max-width: 1100px; margin: 12px auto 0; text-align: left; }
+        .legend { color: var(--muted); margin-top: 8px; }
+        .figrow { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+        .figcol { flex: 1 1 300px; max-width: 520px; }
+        .expandable { cursor: zoom-in; }
+        .lightbox-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(15,23,42,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 20px;
+        }
+        .lightbox-backdrop.open { display: flex; }
+        .lightbox-img {
+            max-width: 92vw;
+            max-height: 92vh;
+            border-radius: 14px;
+            box-shadow: 0 20px 60px rgba(2,6,23,0.35);
+            background: #fff;
+        }
+        /* Force single-row layout for selected image grids */
+        .one-row { flex-wrap: nowrap; }
+        .one-row .figcol { flex: 0 0 25%; max-width: 25%; }
+        /* Slightly larger columns for depth map comparison */
+        .depth-row .figcol { flex: 1 1 540px; max-width: 540px; }
+        /* Compact hyperparameter tables */
+        .hp-table { width: 100%; max-width: 840px; margin: 0 auto; border-collapse: collapse; }
+        .hp-table th, .hp-table td { text-align: left; padding: 6px 10px; border-bottom: 1px solid rgba(15,23,42,0.08); }
+        .hp-table th { color: var(--muted); font-weight: 600; }
     </style>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta charset="utf-8" />
@@ -82,11 +114,500 @@
 
         <div class="card glass">
             <h2 style="margin-top: 0;">Neural Radiance Field!</h2>
-            <div style="margin-top: 32px;">
-                <img src="./spin.gif" alt="Neural Radiance Field animation" />
+            <div style="margin-top: 32px; text-align: center;">
+                <img src="./spin.gif" alt="Neural Radiance Field animation" style="max-width: 400px; width: 100%; height: auto;" />
             </div>
         </div>
+
+        
+
+        <div class="card glass" id="part-0">
+            <h2 style="margin-top: 0;">Part 0: Calibrating Your Camera and Capturing a 3D Scan</h2>
+            
+            <h3 id="part-0-1" style="margin-top: 24px;">Part 0.1: Calibrating Your Camera</h3>
+            <ul style="max-width: 840px; margin: 0 auto; text-align: left;">
+                <li>Captured <strong>53</strong> calibration images at a fixed zoom.</li>
+                <li>Detected ArUco corners and computed intrinsics/distortion via <code>cv2.calibrateCamera</code>.</li>
+                <li>Skipped frames without detections to avoid corrupting calibration.</li>
+                <li>Used <strong>ProCam</strong> to lock exposure, white balance, shutter speed, and ISO; kept autofocus enabled for reliable tag detection.</li>
+                <li>My printer could not print true-to-scale, so I remeasured the printed sheet and used these dimensions in calibration: <strong>ArUco tag length</strong> 53.5&nbsp;mm, <strong>horizontal separation</strong> 27&nbsp;mm, <strong>vertical separation</strong> 14&nbsp;mm.</li>
+            </ul>
+            <div class="figure" style="margin-top: 12px;">
+                <h3 style="margin: 0 0 8px;">Calibration image samples</h3>
+                <div class="figrow one-row">
+                    <div class="figcol">
+                        <img class="expandable" src="./0/calib/IMG_9012%20Medium.jpeg" alt="Calibration sample 1">
+                    </div>
+                    <div class="figcol">
+                        <img class="expandable" src="./0/calib/IMG_9018%20Medium.jpeg" alt="Calibration sample 2">
+                    </div>
+                    <div class="figcol">
+                        <img class="expandable" src="./0/calib/IMG_9025%20Medium.jpeg" alt="Calibration sample 3">
+                    </div>
+                    <div class="figcol">
+                        <img class="expandable" src="./0/calib/IMG_9035%20Medium.jpeg" alt="Calibration sample 4">
+                    </div>
+                </div>
+                <p class="legend">Four example frames used for camera calibration.</p>
+            </div>
+            <h3 id="part-0-2" style="margin-top: 24px;">Part 0.2: Capturing a 3D Object Scan</h3>
+            <ul style="max-width: 840px; margin: 0 auto; text-align: left;">
+                <li>Captured <strong>59</strong> object images next to a printed ArUco tag.</li>
+                <li>Used the same <strong>ProCam</strong> setup to lock exposure, white balance, shutter, and ISO; left autofocus on for robust tag detection and minimized motion blur.</li>
+                <li>For the single reference tag used during capture, the measured side length was <strong>95.5&nbsp;mm</strong>.</li>
+            </ul>
+            <div class="figure" style="margin-top: 12px;">
+                <h3 style="margin: 0 0 8px;">Object scan samples</h3>
+                <div class="figrow one-row">
+                    <div class="figcol">
+                        <img class="expandable" src="./0/object/IMG_9067%20Medium.jpeg" alt="Object scan sample 1">
+                    </div>
+                    <div class="figcol">
+                        <img class="expandable" src="./0/object/IMG_9095%20Medium.jpeg" alt="Object scan sample 2">
+                    </div>
+                    <div class="figcol">
+                        <img class="expandable" src="./0/object/IMG_9111%20Medium.jpeg" alt="Object scan sample 3">
+                    </div>
+                    <div class="figcol">
+                        <img class="expandable" src="./0/object/IMG_9118%20Medium.jpeg" alt="Object scan sample 4">
+                    </div>
+                </div>
+                <p class="legend">Example frames from the object capture session.</p>
+            </div>
+            <h3 id="part-0-3" style="margin-top: 24px;">Part 0.3 + 0.4: Estimating Camera Pose and Dataset</h3>
+            <ul style="max-width: 840px; margin: 0 auto; text-align: left;">
+                <li>Used <code>cv2.solvePnP</code> with detected corners and intrinsics to recover pose.</li>
+                <li>Converted to camera-to-world matrices for visualization and later parts.</li>
+                <li>Visualized camera frustums in 3D in Viser.</li>
+                <li>Undistorted images with <code>cv2.undistort</code> (and optionally used an optimal new camera matrix).</li>
+                <li>Using recovered intrinsics and poses (<code>c2w</code>), I packaged everything into a final <code>.npz</code> dataset for training.</li>
+            </ul>
+            
+            <div class="figure" style="margin-top: 12px;">
+                <h3 style="margin: 0 0 8px; text-align: center;">3D Visualization: Cameras, Rays, and Samples</h3>
+                <p style="max-width: 840px; margin: 0 auto 8px; text-align: left;">
+                    In the visualization below, the camera-to-world (<code>c2w</code>) frames make it clear where each
+                    photograph was taken from. The camera centers trace an approximately hemispherical path around the
+                    object—covering different azimuths and elevations—so you can see angles and positions spanning a
+                    broad arc. This is visible in the Viser plot and provides good angular coverage while keeping the
+                    object at a roughly constant distance.
+                </p>
+                <div class="figrow">
+                    <div class="figcol">
+                        <img class="expandable" src="./0/viser/rays.png" alt="3D visualization of camera frustums and rays">
+                        <p class="legend" style="text-align: center;">Camera frustums and sampled rays</p>
+                    </div>
+                    <div class="figcol">
+                        <img class="expandable" src="./0/viser/samples.png" alt="3D visualization of points sampled along rays">
+                        <p class="legend" style="text-align: center;">Points sampled along rays</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card glass" id="part-1">
+            <h2 style="margin-top: 0;">Part 1: Fit a Neural Field to a 2D Image</h2>
+            <p style="max-width: 840px; margin: 0 auto 10px; text-align: left;">
+                In this part, I train a neural field (an MLP with sinusoidal positional encoding) to map
+                2D pixel coordinates to RGB, fitting an image by minimizing mean squared error. The output
+                quality is measured with Peak Signal-to-Noise Ratio (PSNR), which increases as MSE decreases:
+            </p>
+            <div class="figure" style="margin-top: 6px;">
+                <div style="font-family: Georgia, 'Times New Roman', serif; font-size: 20px; text-align: left; max-width: 840px; margin: 0 auto;">
+                    <em>PSNR</em> = 10 · log<sub>10</sub>( 1 / <em>MSE</em> )
+                </div>
+            </div>
+            <div class="figure" style="margin-top: 16px;">
+                <h3 style="margin: 0 0 8px;">Model Architecture</h3>
+                <div style="text-align: center;">
+                    <img class="expandable" src="./1/model_architecture.png" alt="Model architecture diagram" style="max-width: 900px; width: 100%; height: auto; display: block; margin: 0 auto;">
+                </div>
+                <p class="legend">MLP with positional encoding and a skip connection.</p>
+            </div>
+            <ul style="max-width: 840px; margin: 0 auto; text-align: left;">
+                <li>Implemented an MLP with sinusoidal positional encoding to map 2D coords → RGB.</li>
+                <li>Used a random pixel sampling dataloader; trained with MSE (Adam 1e-2).</li>
+                <li>Reported PSNR and tuned width and max PE frequency.</li>
+            </ul>
+            
+            <div class="figure" style="margin-top: 14px;">
+                <h3 style="margin: 0 0 8px;">Hyperparameters (Example + Yosemite training)</h3>
+                <table class="hp-table">
+                    <thead>
+                        <tr><th>Parameter</th><th>Value</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>iters</td><td><code>2000</code></td></tr>
+                        <tr><td>batch_size</td><td><code>20000</code></td></tr>
+                        <tr><td>lr</td><td><code>0.001</code></td></tr>
+                        <tr><td>width</td><td><code>512</code></td></tr>
+                        <tr><td>depth</td><td><code>8</code></td></tr>
+                        <tr><td>pe_levels</td><td><code>12</code></td></tr>
+                    </tbody>
+                </table>
+                <p class="legend">These hyperparameters were used for both the example image and the Yosemite image training.</p>
+            </div>
+            <div class="figure" style="margin-top: 20px;">
+                <h3 style="margin: 0 0 8px;">Example: Training progression</h3>
+                <p class="legend">Resolution: Pixel Width: 1.024, Pixel Height: 689.</p>
+                <div class="figrow">
+                    <div class="figcol">
+                        <img class="expandable" src="./1/example/recon_step_00001.png" alt="Example training progression at step 1">
+                        <p class="legend">Step 1</p>
+                    </div>
+                    <div class="figcol">
+                        <img class="expandable" src="./1/example/recon_step_00050.png" alt="Example training progression at step 50">
+                        <p class="legend">Step 50</p>
+                    </div>
+                    <div class="figcol">
+                        <img class="expandable" src="./1/example/recon_step_00100.png" alt="Example training progression at step 100">
+                        <p class="legend">Step 100</p>
+                    </div>
+                    <div class="figcol">
+                        <img class="expandable" src="./1/example/recon_step_00200.png" alt="Example training progression at step 200">
+                        <p class="legend">Step 200</p>
+                    </div>
+                    <div class="figcol">
+                        <img class="expandable" src="./1/example/recon_step_00400.png" alt="Example training progression at step 400">
+                        <p class="legend">Step 400</p>
+                    </div>
+                    <div class="figcol">
+                        <img class="expandable" src="./1/example/recon_step_02000.png" alt="Example training progression at step 2000">
+                        <p class="legend">Step 2000</p>
+                    </div>
+                </div>
+                <h3 style="margin: 20px 0 8px;">Example: PSNR and MSE curves</h3>
+                <div class="figrow">
+                    <div class="figcol">
+                        <img class="expandable" src="./1/example/psnr_curve.png" alt="Example PSNR curve over iterations">
+                        <p class="legend">PSNR over iterations</p>
+                    </div>
+                    <div class="figcol">
+                        <img class="expandable" src="./1/example/mse_curve.png" alt="Example MSE curve over iterations">
+                        <p class="legend">MSE over iterations</p>
+                    </div>
+                </div>
+            </div>
+            <div class="figure" style="margin-top: 20px;">
+                <h3 style="margin: 0 0 8px;">Yosemite: Training progression</h3>
+                <p class="legend">Resolution: Pixel Width: 2.075, Pixel Height: 1.177.</p>
+                <div class="figrow">
+                    <div class="figcol">
+                        <img class="expandable" src="./1/yosemite/recon_step_00001.png" alt="Yosemite training progression at step 1">
+                        <p class="legend">Step 1</p>
+                    </div>
+                    <div class="figcol">
+                        <img class="expandable" src="./1/yosemite/recon_step_00200.png" alt="Yosemite training progression at step 200">
+                        <p class="legend">Step 200</p>
+                    </div>
+                    <div class="figcol">
+                        <img class="expandable" src="./1/yosemite/recon_step_00400.png" alt="Yosemite training progression at step 400">
+                        <p class="legend">Step 400</p>
+                    </div>
+                    <div class="figcol">
+                        <img class="expandable" src="./1/yosemite/recon_step_00600.png" alt="Yosemite training progression at step 600">
+                        <p class="legend">Step 600</p>
+                    </div>
+                    <div class="figcol">
+                        <img class="expandable" src="./1/yosemite/recon_step_01400.png" alt="Yosemite training progression at step 1400">
+                        <p class="legend">Step 1400</p>
+                    </div>
+                    <div class="figcol">
+                        <img class="expandable" src="./1/yosemite/recon_step_07000.png" alt="Yosemite training progression at step 7000">
+                        <p class="legend">Step 7000</p>
+                    </div>
+                </div>
+                <h3 style="margin: 20px 0 8px;">Yosemite: PSNR and MSE curves</h3>
+                <div class="figrow">
+                    <div class="figcol">
+                        <img class="expandable" src="./1/yosemite/psnr_curve.png" alt="Yosemite PSNR curve over iterations">
+                        <p class="legend">PSNR over iterations</p>
+                    </div>
+                    <div class="figcol">
+                        <img class="expandable" src="./1/yosemite/mse_curve.png" alt="Yosemite MSE curve over iterations">
+                        <p class="legend">MSE over iterations</p>
+                    </div>
+                </div>
+            </div>
+            <div class="figure" style="margin-top: 20px;">
+                <h3 style="margin: 0 0 8px;">Hyperparameter Comparison</h3>
+                <ul style="max-width: 840px; margin: 0; text-align: left;">
+                    <li><strong>image</strong>: <code>example.jpg</code></li>
+                    <li><strong>sweep_widths</strong>: <code>32, 64</code></li>
+                    <li><strong>sweep_pe_levels</strong>: <code>2, 4</code></li>
+                </ul>
+            </div>
+            <div class="figure">
+                <img class="expandable" src="./1/recon_grid_2x2.png" alt="2×2 comparison grid: TL=w32_L2, TR=w32_L4, BL=w64_L2, BR=w64_L4">
+                <p class="legend">
+                    Top-left: w32_L2 • Top-right: w32_L4 • Bottom-left: w64_L2 • Bottom-right: w64_L4
+                </p>
+                <p style="max-width: 840px; margin: 8px auto 0; text-align: left;">
+                    The results show that both the positional encoding frequency <strong>L</strong> and the network width <strong>W</strong> matter.
+                    When either is too small, the model lacks frequency coverage and capacity, which yields overly smooth/blurry reconstructions.
+                    Increasing <strong>L</strong> allows the network to represent higher-frequency detail (less blur), and increasing <strong>W</strong>
+                    provides more parameters, improving capacity and overall image fidelity.
+                </p>
+            </div>
+        </div>
+
+        <div class="card glass" id="part-2">
+            <h2 style="margin-top: 0;">Part 2: Fit a Neural Radiance Field from Multi-view Images</h2>
+            <h3 id="part-2-1" style="margin-top: 24px;">Part 2.1: Create Rays from Cameras</h3>
+            <p style="max-width: 840px; margin: 0 auto; text-align: left;">
+                Implemented camera/world transforms, pixel→camera, and pixel→ray functions.
+            </p>
+            <h3 id="part-2-2" style="margin-top: 24px;">Part 2.2: Sampling</h3>
+            <p style="max-width: 840px; margin: 0 auto; text-align: left;">
+                Sampled rays across images and sampled points along rays with perturbation.
+            </p>
+            <h3 id="part-2-3" style="margin-top: 24px;">Part 2.3: Putting the Dataloading All Together</h3>
+            <p style="max-width: 840px; margin: 0 auto; text-align: left;">
+                My dataloader returns ray origins, directions, and pixel colors and includes utilities to visualize with cameras.
+            </p>
+            <div class="figure">
+                <div class="figrow">
+                    <div class="figcol">
+                        <img class="expandable" src="./2/lego/lego_rays.png" alt="Lego dataset: sampled camera rays visualization">
+                        <p class="legend">Lego dataset: sampled camera rays</p>
+                    </div>
+                    <div class="figcol">
+                        <img class="expandable" src="./2/lego/lego_samples.png" alt="Lego dataset: sampled points along rays visualization">
+                        <p class="legend">Lego dataset: points sampled along rays</p>
+                    </div>
+                </div>
+            </div>
+            <h3 id="part-2-4" style="margin-top: 24px;">Part 2.4: Neural Radiance Field</h3>
+            <p style="max-width: 840px; margin: 0 auto; text-align: left;">
+                MLP takes encoded 3D coords and view dirs; outputs density and color. Deeper network with skip.
+            </p>
+            <div class="figure" style="margin-top: 20px;">
+                <h3 style="margin: 0 0 8px;">NeRF Model Architecture</h3>
+                <div style="text-align: center;">
+                    <img class="expandable" src="./2/model_architecte.png" alt="NeRF architecture diagram" style="max-width: 100%; height: auto; display: block; margin: 0 auto;">
+                </div>
+                <p class="legend">Coarse-to-fine MLP with positional encodings, density head (ReLU) and color head (Sigmoid) conditioned on view direction.</p>
+            </div>
+            <p style="max-width: 840px; margin: 8px auto 0; text-align: left;">
+                For Part 2 I kept the architecture essentially the same as the reference NeRF:
+                a stacked MLP with a skip connection, separate density and color heads, and
+                positional encodings for both 3D coordinates and view directions. My changes
+                focused on hyperparameters only (e.g., network <strong>width</strong>, coordinate
+                positional-encoding levels <strong>L</strong>, and view-direction encoding levels
+                <strong>L<sub>dir</sub></strong>).
+            </p>
+            <h3 id="part-2-5" style="margin-top: 24px;">Part 2.5: Volume Rendering</h3>
+            <p style="max-width: 840px; margin: 0 auto; text-align: left;">
+                Implemented differentiable volume rendering in Torch and verified against the provided test.
+            </p>
+            
+            <div class="figure" style="margin-top: 20px;">
+                <h3 style="margin: 0 0 8px;">Hyperparameters (Lego NeRF)</h3>
+                <table class="hp-table">
+                    <thead>
+                        <tr><th>Parameter</th><th>Value</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>steps</td><td><code>10000</code></td></tr>
+                        <tr><td>width</td><td><code>256</code></td></tr>
+                        <tr><td>depth</td><td><code>8</code></td></tr>
+                        <tr><td>skip_layer</td><td><code>4</code></td></tr>
+                        <tr><td>posenc_L</td><td><code>10</code></td></tr>
+                        <tr><td>direnc_L</td><td><code>4</code></td></tr>
+                        <tr><td>lr</td><td><code>0.0005</code></td></tr>
+                        <tr><td>batch_rays</td><td><code>4096</code></td></tr>
+                        <tr><td>num_samples</td><td><code>64</code></td></tr>
+                        <tr><td>near</td><td><code>2.0</code></td></tr>
+                        <tr><td>far</td><td><code>6.0</code></td></tr>
+                    </tbody>
+                </table>
+                <p class="legend">Using the standard NeRF model size for Lego (width 256, positional-encoding L=10); other settings as listed.</p>
+                <p class="legend">Actual Lego training ran for 10,000 steps.</p>
+            </div>
+            <div class="figure" style="margin-top: 20px;">
+                <h3 style="margin: 0 0 8px;">Lego: Training progression</h3>
+                <div class="figrow">
+                    <div class="figcol">
+                        <img class="expandable" src="./2/lego/recon/recon_step_00001-2.png" alt="Lego training progression at step 1">
+                        <p class="legend">Step 1</p>
+                    </div>
+                    <div class="figcol">
+                        <img class="expandable" src="./2/lego/recon/recon_step_00200-5.png" alt="Lego training progression at step 200">
+                        <p class="legend">Step 200</p>
+                    </div>
+                    <div class="figcol">
+                        <img class="expandable" src="./2/lego/recon/recon_step_00400-7.png" alt="Lego training progression at step 400">
+                        <p class="legend">Step 400</p>
+                    </div>
+                    <div class="figcol">
+                        <img class="expandable" src="./2/lego/recon/recon_step_01400-4.png" alt="Lego training progression at step 1400">
+                        <p class="legend">Step 1400</p>
+                    </div>
+                    <div class="figcol">
+                        <img class="expandable" src="./2/lego/recon/recon_step_04000-4.png" alt="Lego training progression at step 4000">
+                        <p class="legend">Step 4000</p>
+                    </div>
+                    <div class="figcol">
+                        <img class="expandable" src="./2/lego/recon/recon_step_10000.png" alt="Lego training progression at step 10000">
+                        <p class="legend">Step 10000</p>
+                    </div>
+                </div>
+                <h3 style="margin: 20px 0 8px;">Lego: PSNR and MSE curves</h3>
+                <div class="figrow">
+                    <div class="figcol">
+                        <img class="expandable" src="./2/lego/psnr_curve-6.png" alt="Lego PSNR curve over iterations">
+                        <p class="legend">PSNR over iterations</p>
+                    </div>
+                    <div class="figcol">
+                        <img class="expandable" src="./2/lego/mse_curve.png" alt="Lego MSE curve over iterations">
+                        <p class="legend">MSE over iterations</p>
+                    </div>
+                </div>
+            </div>
+            <div class="figure">
+                <h3 style="margin: 12px 0 8px;">Lego: Spherical rendering (10,000 iterations)</h3>
+                <div style="text-align: center;">
+                    <img class="expandable" src="./2/lego/spin.gif" alt="Lego spherical rendering after 10,000 iterations" style="max-width: 720px; width: 100%; height: auto; display: block; margin: 0 auto;">
+                </div>
+                <p class="legend" style="text-align: center;">Rendered with provided test camera extrinsics after 10,000 iterations.</p>
+            </div>
+            <h3 id="part-2-6" style="margin-top: 24px;">Part 2.6: Training with your own data</h3>
+            <p style="max-width: 840px; margin: 0 auto; text-align: left;">
+                I trained a NeRF on my Part 0 dataset, rendered a circling camera GIF, and tracked loss with intermediate renders.
+            </p>
+            <p style="max-width: 840px; margin: 8px auto 0; text-align: left;">
+                I rescaled images to a width of <strong>800 px</strong> and scaled the camera intrinsics accordingly.
+                I chose a higher resolution because my calibration was not perfect: in Viser, back‑projected rays from the
+                camera origin did not intersect exactly at the ArUco tag borders (as they would with ideal intrinsics/poses).
+                My hypothesis was that a higher resolution would reduce pixel‑level quantization error and provide more
+                samples per object area, helping NeRF tolerate small calibration errors. In practice, training at the
+                higher resolution produced better results, which likely supports this rationale (with the trade‑off of
+                increased compute).
+            </p>
+            <div class="figure" style="margin-top: 16px;">
+                <h3 style="margin: 0 0 8px;">Hyperparameters (Own dataset training)</h3>
+                <table class="hp-table">
+                    <thead>
+                        <tr><th>Parameter</th><th>Value</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>steps</td><td><code>30000</code></td></tr>
+                        <tr><td>near</td><td><code>0.2</code></td></tr>
+                        <tr><td>far</td><td><code>0.6</code></td></tr>
+                        <tr><td>batch_rays</td><td><code>8000</code></td></tr>
+                        <tr><td>num_samples</td><td><code>64</code></td></tr>
+                        <tr><td>eval_every</td><td><code>200</code></td></tr>
+                        <tr><td>ckpt_every</td><td><code>1000</code></td></tr>
+                        <tr><td>width</td><td><code>512</code></td></tr>
+                        <tr><td>depth</td><td><code>8</code></td></tr>
+                        <tr><td>skip_layer</td><td><code>4</code></td></tr>
+                        <tr><td>posenc_L</td><td><code>12</code></td></tr>
+                        <tr><td>direnc_L</td><td><code>4</code></td></tr>
+                        <tr><td>lr</td><td><code>6e-4</code></td></tr>
+                    </tbody>
+                </table>
+                <p class="legend" style="margin-top: 8px;">
+                    Because I increased the input resolution, rays sampled the scene more densely and the images contained
+                    higher spatial frequencies. To model this additional detail, I raised the positional‑encoding levels
+                    (<code>posenc_L</code> for coordinates and <code>direnc_L</code> for view directions), and increased the network
+                    <strong>width</strong> to provide more capacity. In short: more pixels → more high‑frequency content → higher PE,
+                    and denser 3D sampling → a wider MLP to faithfully represent the added detail.
+                </p>
+            </div>
+            <div class="figure">
+                <h3 style="margin: 12px 0 8px; text-align: center;">Own dataset: Shoe novel views</h3>
+                <div style="text-align: center;">
+                    <img class="expandable" src="./2/shoe/spin-24.gif" alt="Own dataset (shoe): spherical rendering GIF" style="max-width: 800px; width: 100%; height: auto; display: block; margin: 0 auto;">
+                </div>
+                <p class="legend" style="text-align: center;">Shoe reconstruction, 24-frame spin.</p>
+            </div>
+            
+        </div>
+
+        <div class="card glass" id="bells">
+            <h2 style="margin-top: 0;">Bells &amp; Whistles</h2>
+            <h3 style="margin: 24px 0 8px;">Depth Map Rendering with Accumulated Opacity Threshold</h3>
+            <p style="max-width: 840px; margin: 0 auto; text-align: left;">
+                Along each camera ray, NeRF samples points with predicted densities
+                <em>σ</em> (and colors). Volumetric rendering assigns each sample an opacity
+                <em>α<sub>i</sub> = 1 − exp(−σ<sub>i</sub> Δ<sub>i</sub>)</em> over interval <em>Δ<sub>i</sub></em> and a transmittance
+                <em>T<sub>i</sub> = exp(−∑<sub>j&lt;i</sub> σ<sub>j</sub> Δ<sub>j</sub>)</em>. The per‑sample weight is
+                <em>w<sub>i</sub> = T<sub>i</sub> · α<sub>i</sub></em>. The depth map is the ray‑wise expectation of distance:
+                <em>Depth = ∑ w<sub>i</sub> · t<sub>i</sub></em> (optionally normalized for display).
+            </p>
+            <p style="max-width: 840px; margin: 8px auto 0; text-align: left;">
+                The accumulated opacity (confidence) that a ray intersects a surface is
+                <em>acc = ∑ w<sub>i</sub></em>, with values near 0 indicating empty space and near 1 indicating an
+                opaque hit. A threshold <code>acc_thresh</code> masks rays with insufficient confidence
+                (<em>acc &lt; acc_thresh</em>) and normalizes depths over the remaining pixels, suppressing floaters and
+                background leakage in low‑confidence regions.
+            </p>
+            <p style="max-width: 840px; margin: 8px auto 0; text-align: left;">
+                I tuned <code>acc_thresh</code> empirically. Lower values kept semi‑transparent floaters, while higher values
+                started knocking out thin structures. Settling around <code>acc_thresh ≈ 0.3</code> consistently produced cleaner,
+                more stable depth maps for my scenes.
+            </p>
+            <div class="figure" style="margin-top: 20px;">
+                <h3 style="margin: 0 0 8px; text-align: center;">Lego: Depth Map Comparison</h3>
+                <div class="figrow depth-row" style="align-items: flex-start;">
+                    <div class="figcol" style="text-align: center;">
+                        <img class="expandable" src="./3/spin_depth-noisy.gif" alt="Lego depth map without acc_thresh filtering" style="max-width: 100%; height: auto; display: block; margin: 0 auto;">
+                        <p class="legend">Without acc_thresh (noisy, shows floaters and artifacts)</p>
+                    </div>
+                    <div class="figcol" style="text-align: center;">
+                        <img class="expandable" src="./3/spin_depth-2.gif" alt="Lego depth map with acc_thresh = 0.3" style="max-width: 100%; height: auto; display: block; margin: 0 auto;">
+                        <p class="legend">With acc_thresh = 0.3 (clean, artifacts removed)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card glass" id="learnings">
+            <h2 style="margin-top: 0;">Learnings</h2>
+            <ul style="max-width: 840px; margin: 0 auto; text-align: left;">
+                <li>Dataset creation was the hardest part. Reliable intrinsics/poses and disciplined capture matter more than small model tweaks.</li>
+                <li>Lego trained easily; my own data was more challenging. High‑quality results required precise calibration and consistent capture geometry.</li>
+                <li>Surprisingly, skipping undistortion improved my results—likely because the iPhone lens has minimal distortion and/or applies in‑camera correction.</li>
+            </ul>
+        </div>
+
+        
     </div>
+    <div id="lightbox" class="lightbox-backdrop" aria-hidden="true">
+        <img class="lightbox-img" alt="">
+    </div>
+    <script>
+    (function() {
+        var backdrop = document.getElementById('lightbox');
+        var imgEl = backdrop ? backdrop.querySelector('.lightbox-img') : null;
+        if (!backdrop || !imgEl) return;
+        function openLightbox(src, alt) {
+            imgEl.src = src;
+            imgEl.alt = alt || '';
+            backdrop.classList.add('open');
+            backdrop.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeLightbox() {
+            backdrop.classList.remove('open');
+            backdrop.setAttribute('aria-hidden', 'true');
+            imgEl.src = '';
+            document.body.style.overflow = '';
+        }
+        backdrop.addEventListener('click', closeLightbox);
+        imgEl.addEventListener('click', function(ev) { ev.stopPropagation(); });
+        document.addEventListener('keydown', function(ev) {
+            if (ev.key === 'Escape' && backdrop.classList.contains('open')) {
+                closeLightbox();
+            }
+        });
+        Array.prototype.forEach.call(document.querySelectorAll('img.expandable'), function(el) {
+            el.addEventListener('click', function() {
+                openLightbox(el.src, el.alt);
+            });
+        });
+    })();
+    </script>
 </body>
 </html>
 

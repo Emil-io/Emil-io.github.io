@@ -319,6 +319,21 @@
                 Access was configured on Hugging Face and prompt embeddings were generated on the course clusters. A fixed random seed (1234) is used throughout Part A for reproducibility.
             </p>
             <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                For text‑to‑image sampling, I compared the default <code>num_inference_steps=20</code> against a longer run with
+                <code>num_inference_steps=50</code> (see the 50‑step results below).
+                The 50‑step outputs look noticeably more realistic and coherent, with finer‑grained texture and fewer artifacts.
+                This makes sense because more inference steps means more iterative denoising/refinement updates, so the model has more chances
+                to add detail and clean up structure.
+            </p>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                However, longer runs are slower and cost more compute. For simplicity and faster iteration (especially under limited compute),
+                I used 20 steps for the remaining parts of the assignment.
+            </p>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                Qualitatively, the samples also depend on the prompt: short, precise prompts describing well‑known concepts tend to work best and produce very faithful images.
+                In contrast, longer and more specific prompts often performed worse here, likely because those detailed combinations are less consistently represented in the training distribution.
+            </p>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
                 Below are example prompts and their Stage II upsampled samples.
             </p>
             <ul class="inline-list">
@@ -328,19 +343,39 @@
             <div class="grid-4 part0-grid" style="margin-top:14px;">
                 <figure>
                     <img class="expandable thumb-lg" src="./part1/0/01_stage2.png" alt="Text-to-image sample 1 (upsampled)" />
-                    <figcaption>Stage II upsampled image – prompt: <code>photo of the moon</code>.</figcaption>
+                    <figcaption><b>20 steps</b> – prompt: <code>photo of the moon</code>.</figcaption>
                 </figure>
                 <figure>
                     <img class="expandable thumb-lg" src="./part1/0/02_stage2.png" alt="Text-to-image sample 2 (upsampled)" />
-                    <figcaption>Stage II upsampled image – prompt: <code>a rocket ship</code>.</figcaption>
+                    <figcaption><b>20 steps</b> – prompt: <code>a rocket ship</code>.</figcaption>
                 </figure>
                 <figure>
                     <img class="expandable thumb-lg" src="./part1/0/03_stage2.png" alt="Text-to-image sample 3 (upsampled)" />
-                    <figcaption>Stage II upsampled image – prompt: <code>big frog near a lake</code>.</figcaption>
+                    <figcaption><b>20 steps</b> – prompt: <code>big frog near a lake</code>.</figcaption>
                 </figure>
                 <figure>
                     <img class="expandable thumb-lg" src="./part1/0/04_stage2.png" alt="Text-to-image sample 4 (upsampled)" />
-                    <figcaption>Stage II upsampled image – prompt: <code>a rocky coastline</code>.</figcaption>
+                    <figcaption><b>20 steps</b> – prompt: <code>a rocky coastline</code>.</figcaption>
+                </figure>
+            </div>
+
+            <h3 class="subsection-title" style="margin-top:16px;">Same prompts with 50 inference steps</h3>
+            <div class="grid-4 part0-grid" style="margin-top:10px;">
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/0/50steps/01_stage2.png" alt="Text-to-image sample 1 (50 steps)" />
+                    <figcaption><b>50 steps</b> – prompt: <code>photo of the moon</code>.</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/0/50steps/02_stage2.png" alt="Text-to-image sample 2 (50 steps)" />
+                    <figcaption><b>50 steps</b> – prompt: <code>a rocket ship</code>.</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/0/50steps/03_stage2.png" alt="Text-to-image sample 3 (50 steps)" />
+                    <figcaption><b>50 steps</b> – prompt: <code>big frog near a lake</code>.</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/0/50steps/04_stage2.png" alt="Text-to-image sample 4 (50 steps)" />
+                    <figcaption><b>50 steps</b> – prompt: <code>a rocky coastline</code>.</figcaption>
                 </figure>
             </div>
         </section>
@@ -383,6 +418,10 @@
                 Before using diffusion models, the forward‑noised Campanile images were denoised with Gaussian blur
                 (via <code>torchvision.transforms.functional.gaussian_blur</code>). Kernel size and \(\sigma\) were tuned for each noise level,
                 but even the best results blur out fine details and cannot fully remove structured noise.
+            </p>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                At higher timesteps the noise dominates and overlaps with true image edges, so a low‑pass filter cannot separate “noise” from “signal”:
+                increasing \(\sigma\) suppresses noise but also wipes out high‑frequency detail, producing blurry and distorted results.
             </p>
             <p class="muted" style="max-width:860px;margin:0 auto 10px;">
                 Highlighted below are the settings that looked best: \(\sigma=1.0\) for \(t=250\), \(\sigma=2.0\) for \(t=500\), and \(\sigma=2.0\) for \(t=750\).
@@ -1401,6 +1440,9 @@
             <h2 style="margin-top:0;">Denoising pure noise</h2>
             <p class="muted" style="max-width:860px;margin:0 auto 10px;">
                 The UNet is retrained to map pure Gaussian noise directly to clean digits. With an MSE loss the model tends to predict “average” digit shapes.
+            </p>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                This “average digit” pattern is expected: mapping pure noise to a digit is highly ambiguous (many digits could plausibly fit), and minimizing \(\ell_2\) error encourages the network to output the conditional mean of the training targets. Averaging over multiple digit modes produces a blurry, prototype-like digit rather than a crisp sample from any single class.
             </p>
             <div class="grid-1 mnist-narrow mnist-center" style="margin-top:10px;">
                 <figure>

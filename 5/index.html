@@ -1,0 +1,1636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Project 5 – Diffusion Models (Part A)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Project 5 – Diffusion Models (Part A)" />
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <style>
+        :root {
+            --bg: #f5f7fb;
+            --text: #0f172a;
+            --muted: #475569;
+            --border: rgba(255,255,255,0.35);
+            --accent: #2563eb;
+            --glass-bg: rgba(255,255,255,0.45);
+            --glass-shadow: 0 10px 30px rgba(2,6,23,0.08);
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            margin: 0;
+            line-height: 1.65;
+            color: var(--text);
+            background: var(--bg);
+            text-align: center;
+        }
+        .container { max-width: 1320px; margin: 0 auto; padding: 32px 20px; }
+        header {
+            margin-bottom: 20px;
+            padding: 16px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        header h1 { margin: 0; font-size: 32px; }
+        header p { margin: 6px 0 0; color: var(--text); }
+        nav a { color: var(--accent); text-decoration: none; }
+        nav a:hover { text-decoration: underline; }
+        .glass {
+            position: relative;
+            border-radius: 18px;
+            border: 1px solid transparent;
+            background-image:
+                linear-gradient(135deg, rgba(255,255,255,0.55), rgba(255,255,255,0.25)),
+                linear-gradient(135deg, rgba(255,255,255,0.85), rgba(17,24,39,0.08));
+            background-origin: padding-box, border-box;
+            background-clip: padding-box, border-box;
+            box-shadow: var(--glass-shadow);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            backdrop-filter: blur(16px) saturate(180%);
+        }
+        .glass > * { position: relative; z-index: 1; }
+        .glass::before {
+            content: "";
+            position: absolute;
+            inset: 1px;
+            border-radius: inherit;
+            pointer-events: none;
+            background: radial-gradient(120% 80% at 0% 0%, rgba(255,255,255,0.65), rgba(255,255,255,0) 60%);
+            mix-blend-mode: screen;
+            z-index: 0;
+        }
+        .glass::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            pointer-events: none;
+            box-shadow:
+                inset 0 1px 0 rgba(255,255,255,0.6),
+                inset 0 -1px 0 rgba(255,255,255,0.35),
+                inset 0 0 40px rgba(255,255,255,0.12);
+            z-index: 0;
+        }
+        .card { padding: 24px 28px; margin: 20px 0; text-align: left; }
+        .muted { color: var(--muted); }
+        img { border-radius: 12px; max-width: 100%; height: auto; display: block; }
+        figure { margin: 0; text-align: center; }
+        figcaption {
+            margin-top: 6px;
+            font-size: 0.85rem;
+            color: var(--muted);
+            text-align: center;
+            max-width: 260px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        /* Highlight "best" Gaussian blur results in Part 1.2 */
+        .best-sigma {
+            outline: 4px solid rgba(37,99,235,0.9);
+            outline-offset: 6px;
+        }
+        .figrow {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            justify-content: center;
+        }
+        .figcol {
+            flex: 1 1 280px;
+            max-width: 440px;
+        }
+        .wide { max-width: 960px; margin: 0 auto; }
+        .pill {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: rgba(37,99,235,0.08);
+            color: var(--accent);
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+        .subsection-title { margin: 18px 0 8px; font-size: 1.1rem; }
+        /* When we include long prompt strings inside headings, keep that part non-bold for readability. */
+        .subsection-title .inline-prompts { font-weight: 400; }
+        /* Center the "t = ..." headings in Part 1.2 */
+        #part-1-2 .subsection-title { text-align: center; }
+        /* Narrow container for some Part B visualizations (keeps big grids from feeling oversized). */
+        .mnist-narrow { max-width: 760px; margin-left: auto; margin-right: auto; }
+        .mnist-tight { max-width: 640px; margin-left: auto; margin-right: auto; }
+        .mnist-center { display: grid; justify-items: center; }
+        .mnist-wide { max-width: 1100px; margin-left: auto; margin-right: auto; }
+        /* Fixed 3-column grid variant (useful when we want consistent sizing across rows). */
+        .grid-3.fixed3 {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            max-width: 980px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .grid-spacer { width: 100%; height: 1px; }
+        /* Centered row that keeps MNIST OOD tiles the same width as a 3-up grid tile. */
+        .mnist-ood-row {
+            display: flex;
+            justify-content: center;
+            gap: 18px;
+            max-width: 980px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .mnist-ood-row figure { width: calc((980px - 2 * 18px) / 3); }
+        /* 3-up row for MNIST sampling grids (avoid thumbnail cropping). */
+        .mnist-samples-row {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+            align-items: start;
+        }
+        .mnist-samples-row img {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+        }
+        /* 2x2 grid for the improved time-conditioned UNet samples */
+        .mnist-samples-row-4 {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+            align-items: start;
+        }
+        .mnist-samples-row-4 img {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+        }
+        .mnist-samples-row-4 figure.span-2 {
+            grid-column: 1 / -1;
+            max-width: 960px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        /* Center the CFG example images inside their wide columns */
+        #part-1-6 figure > img { margin-left: auto; margin-right: auto; }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 18px;
+            align-items: flex-start;
+            justify-items: center;
+        }
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+            align-items: flex-start;
+            justify-items: center;
+        }
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 24px;
+            align-items: flex-start;
+            justify-items: center;
+            max-width: 900px;
+            margin: 16px auto 0;
+        }
+        .row-5 {
+            display: grid;
+            grid-template-columns: repeat(5, auto);
+            gap: 24px;
+            justify-content: center;
+            align-items: flex-start;
+            margin: 12px auto 0;
+        }
+        .row-7 {
+            display: grid;
+            grid-template-columns: repeat(7, auto);
+            gap: 24px;
+            justify-content: center;
+            align-items: flex-start;
+            margin: 12px auto 0;
+        }
+        .thumb-lg {
+            width: 128px;
+            height: 128px;
+            object-fit: cover;
+        }
+        /* Slightly larger thumbnails for Part 1.8 visual anagrams */
+        #part-1-8 img.thumb-lg {
+            width: 220px;
+            height: 220px;
+        }
+        /* Slightly larger thumbnails for Part 1.9 hybrid images */
+        #part-1-9 img.thumb-lg {
+            width: 220px;
+            height: 220px;
+        }
+        /* Larger thumbnails for Part 1.3 one-step denoising grids */
+        #part-1-3 img.thumb-lg {
+            width: 200px;
+            height: 200px;
+        }
+        /* Larger thumbnails for Part 1.4 iterative denoising comparisons */
+        #part-1-4 img.thumb-lg {
+            width: 220px;
+            height: 220px;
+        }
+        /* Larger thumbnails for Part A – Bells & Whistles */
+        #part-a-bells img.thumb-lg {
+            width: 220px;
+            height: 220px;
+        }
+        .part0-grid img {
+            width: 176px;
+            height: 176px;
+        }
+        .inline-list {
+            max-width: 860px;
+            margin: 0 auto;
+            padding-left: 18px;
+        }
+        .inline-list li { margin-bottom: 4px; }
+        .section-anchor { font-size: 0.85rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+        /* Lightbox */
+        .expandable { cursor: zoom-in; }
+        .lightbox-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(15,23,42,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 20px;
+        }
+        .lightbox-backdrop.open { display: flex; }
+        .lightbox-img {
+            max-width: 92vw;
+            max-height: 92vh;
+            border-radius: 14px;
+            box-shadow: 0 20px 60px rgba(2,6,23,0.35);
+            background: #fff;
+        }
+        @media print {
+            @page { size: auto; margin: 12mm; }
+            html, body { background: #ffffff !important; color: #000000 !important; }
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .container { max-width: none; padding: 0; }
+            header.glass, .card.glass {
+                background: #ffffff !important;
+                background-image: none !important;
+                border: 1px solid #cccccc !important;
+                box-shadow: none !important;
+                -webkit-backdrop-filter: none !important;
+                backdrop-filter: none !important;
+            }
+            nav a { color: #000000 !important; text-decoration: underline; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="glass">
+            <img src="../logo.png" alt="UC Berkeley logo" style="height:64px;width:auto;" />
+            <div style="text-align:left;">
+                <h1>Project 5 – Diffusion Models (Part A)</h1>
+                <p>CS180/280A: Intro to Computer Vision and Computational Photography</p>
+            </div>
+            <nav style="margin-left:auto;"><a href="../index.html">← Back to Home</a></nav>
+        </header>
+
+        <!-- Part 0 -->
+        <section class="card glass" id="part-0">
+            <div class="section-anchor">Part 0</div>
+            <h2 style="margin-top:0;">Setup &amp; Playing with DeepFloyd IF</h2>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                Diffusion models generate images by iteratively denoising noise; in Part A, results come from the pretrained DeepFloyd IF text‑to‑image model (Stage I + Stage II).
+                Access was configured on Hugging Face and prompt embeddings were generated on the course clusters. A fixed random seed (1234) is used throughout Part A for reproducibility.
+            </p>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                Below are example prompts and their Stage II upsampled samples.
+            </p>
+            <ul class="inline-list">
+                <li>Created a Hugging Face account, accepted the <code>DeepFloyd/IF-I-XL-v1.0</code> license, and logged in via access token.</li>
+                <li>Generated custom text prompt embeddings on the course clusters and saved them as a <code>.pth</code> file for Colab.</li>
+            </ul>
+            <div class="grid-4 part0-grid" style="margin-top:14px;">
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/0/01_stage2.png" alt="Text-to-image sample 1 (upsampled)" />
+                    <figcaption>Stage II upsampled image – prompt: <code>photo of the moon</code>.</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/0/02_stage2.png" alt="Text-to-image sample 2 (upsampled)" />
+                    <figcaption>Stage II upsampled image – prompt: <code>a rocket ship</code>.</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/0/03_stage2.png" alt="Text-to-image sample 3 (upsampled)" />
+                    <figcaption>Stage II upsampled image – prompt: <code>big frog near a lake</code>.</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/0/04_stage2.png" alt="Text-to-image sample 4 (upsampled)" />
+                    <figcaption>Stage II upsampled image – prompt: <code>a rocky coastline</code>.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <!-- Part 1.1 -->
+        <section class="card glass" id="part-1-1">
+            <div class="section-anchor">Part 1.1</div>
+            <h2 style="margin-top:0;">Forward Process: Noising the Campanile</h2>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                The forward diffusion process was implemented:
+                \(x_t = \sqrt{\bar\alpha_t}\,x_0 + \sqrt{1-\bar\alpha_t}\,\epsilon\),
+                where \(\bar\alpha_t\) is given by the DeepFloyd schedule and \(\epsilon \sim \mathcal{N}(0,I)\).
+                Using the provided <code>alphas_cumprod</code>, increasing <code>t</code> produces progressively noisier versions of the Campanile.
+            </p>
+            <div class="grid-4">
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/campanile.jpg" alt="Original Campanile" />
+                    <figcaption>Original 64×64 Campanile image.</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.1/campanile_t250.png" alt="Noisy Campanile at t=250" />
+                    <figcaption>Noisy Campanile at \(t=250\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.1/campanile_t500.png" alt="Noisy Campanile at t=500" />
+                    <figcaption>Noisy Campanile at \(t=500\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.1/campanile_t750.png" alt="Noisy Campanile at \(t=750\)" />
+                    <figcaption>Noisy Campanile at \(t=750\).</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <!-- Part 1.2 -->
+        <section class="card glass" id="part-1-2">
+            <div class="section-anchor">Part 1.2</div>
+            <h2 style="margin-top:0;">Classical Gaussian Denoising</h2>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                Before using diffusion models, the forward‑noised Campanile images were denoised with Gaussian blur
+                (via <code>torchvision.transforms.functional.gaussian_blur</code>). Kernel size and \(\sigma\) were tuned for each noise level,
+                but even the best results blur out fine details and cannot fully remove structured noise.
+            </p>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                Highlighted below are the settings that looked best: \(\sigma=1.0\) for \(t=250\), \(\sigma=2.0\) for \(t=500\), and \(\sigma=2.0\) for \(t=750\).
+            </p>
+            <h3 class="subsection-title" style="margin-top:10px;">t = 250</h3>
+            <div class="row-5">
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.2/t250_sigma_none.png" alt="t=250, sigma none" />
+                    <figcaption>\(\sigma = 0\) (no blur).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.2/t250_sigma0.5.png" alt="t=250, sigma 0.5" />
+                    <figcaption>\(\sigma = 0.5\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg best-sigma" src="./part1/1.2/t250_sigma1.0.png" alt="t=250, sigma 1.0 (best)" />
+                    <figcaption>\(\sigma = 1.0\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.2/t250_sigma2.0.png" alt="t=250, sigma 2.0" />
+                    <figcaption>\(\sigma = 2.0\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.2/t250_sigma3.0.png" alt="t=250, sigma 3.0" />
+                    <figcaption>\(\sigma = 3.0\).</figcaption>
+                </figure>
+            </div>
+
+            <h3 class="subsection-title" style="margin-top:16px;">t = 500</h3>
+            <div class="row-5">
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.2/t500_sigma_none.png" alt="t=500, sigma none" />
+                    <figcaption>\(\sigma = 0\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.2/t500_sigma0.5.png" alt="t=500, sigma 0.5" />
+                    <figcaption>\(\sigma = 0.5\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.2/t500_sigma1.0.png" alt="t=500, sigma 1.0" />
+                    <figcaption>\(\sigma = 1.0\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg best-sigma" src="./part1/1.2/t500_sigma2.0.png" alt="t=500, sigma 2.0 (best)" />
+                    <figcaption>\(\sigma = 2.0\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.2/t500_sigma3.0.png" alt="t=500, sigma 3.0" />
+                    <figcaption>\(\sigma = 3.0\).</figcaption>
+                </figure>
+            </div>
+
+            <h3 class="subsection-title" style="margin-top:16px;">t = 750</h3>
+            <div class="row-5">
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.2/t750_sigma_none.png" alt="t=750, sigma none" />
+                    <figcaption>\(\sigma = 0\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.2/t750_sigma0.5.png" alt="t=750, sigma 0.5" />
+                    <figcaption>\(\sigma = 0.5\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.2/t750_sigma1.0.png" alt="t=750, sigma 1.0" />
+                    <figcaption>\(\sigma = 1.0\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg best-sigma" src="./part1/1.2/t750_sigma2.0.png" alt="t=750, sigma 2.0 (best)" />
+                    <figcaption>\(\sigma = 2.0\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.2/t750_sigma3.0.png" alt="t=750, sigma 3.0" />
+                    <figcaption>\(\sigma = 3.0\).</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <!-- Part 1.3 -->
+        <section class="card glass" id="part-1-3">
+            <div class="section-anchor">Part 1.3</div>
+            <h2 style="margin-top:0;">One‑Step Denoising with DeepFloyd</h2>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                The pretrained Stage I UNet (<code>stage_1.unet</code>) is used (conditioned on the text embedding for
+                “a high quality photo”) to predict noise in a single step, then \(x_0\) is computed from \(x_t\) and \(\epsilon_\theta(x_t, t)\)
+                using the closed‑form denoising formula.
+            </p>
+            <div class="grid-3" style="margin-top:10px;">
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.3/t250_original.png" alt="Original at t=250" />
+                    <figcaption>Original (reference) for \(t=250\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.3/t250_noisy.png" alt="Noisy at t=250" />
+                    <figcaption>Noisy input at \(t=250\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.3/t250_denoised.png" alt="One-step denoised at t=250" />
+                    <figcaption>One‑step diffusion denoising at \(t=250\).</figcaption>
+                </figure>
+            </div>
+            <div class="grid-3" style="margin-top:14px;">
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.3/t500_original.png" alt="Original at t=500" />
+                    <figcaption>Original (reference) for \(t=500\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.3/t500_noisy.png" alt="Noisy at t=500" />
+                    <figcaption>Noisy input at \(t=500\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.3/t500_denoised.png" alt="One-step denoised at t=500" />
+                    <figcaption>One‑step diffusion denoising at \(t=500\).</figcaption>
+                </figure>
+            </div>
+            <div class="grid-3" style="margin-top:14px;">
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.3/t750_original.png" alt="Original at t=750" />
+                    <figcaption>Original (reference) for \(t=750\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.3/t750_noisy.png" alt="Noisy at t=750" />
+                    <figcaption>Noisy input at \(t=750\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.3/t750_denoised.png" alt="One-step denoised at t=750" />
+                    <figcaption>One‑step diffusion denoising at \(t=750\).</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <!-- Part 1.4 -->
+        <section class="card glass" id="part-1-4">
+            <div class="section-anchor">Part 1.4</div>
+            <h2 style="margin-top:0;">Iterative Denoising with Strided Timesteps</h2>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                A strided schedule from \(t=990\) down to \(0\) (stride 30) is used, together with an <code>iterative_denoise</code>
+                loop that repeatedly predicts the clean image, interpolates between signal and noise, and adds the model’s learned variance.
+                Compared to one‑step denoising or Gaussian blur, the iterative sampler produces much cleaner reconstructions.
+            </p>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                Given a current timestep \(t\) and the next (less noisy) timestep \(t'\), the strided DDPM update is:
+            </p>
+            <p class="muted" style="max-width:860px;margin:0 auto 14px;">
+                \[
+                x_{t'}=\frac{\sqrt{\bar{\alpha}_{t'}}\,\beta_t}{1-\bar{\alpha}_t}\,x_0 \;+\; \frac{\sqrt{\alpha_t}\,(1-\bar{\alpha}_{t'})}{1-\bar{\alpha}_t}\,x_t \;+\; v_\sigma
+                \]
+            </p>
+            <div class="grid-2" style="margin-top:10px;">
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.4/t690_original.png" alt="Original Campanile (reference)" />
+                    <figcaption>Original Campanile (reference).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.4/t690_gaussian.png" alt="Gaussian blur baseline" />
+                    <figcaption>Gaussian blur baseline at a comparable noise level.</figcaption>
+                </figure>
+            </div>
+            <div class="grid-3" style="margin-top:14px;">
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.4/t690_one_step.png" alt="One-step diffusion denoising" />
+                    <figcaption>One‑step diffusion denoising from a high‑noise state.</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.4/t690_iterative.png" alt="Iterative denoising result" />
+                    <figcaption>Iterative denoising (strided schedule) – much crisper reconstruction.</figcaption>
+                </figure>
+            </div>
+            <h3 class="subsection-title" style="margin-top:18px;">Intermediate steps (iterative denoising)</h3>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                Snapshots of the reconstruction as the iterative sampler progresses from a noisy start state toward a clean image.
+            </p>
+            <div class="row-5" style="margin-top:10px;">
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.4/t0690_start.png" alt="Iterative denoising start (t=690)" />
+                    <figcaption>Start state (\(t=690\)).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.4/t0540.png" alt="Intermediate denoising step t=540" />
+                    <figcaption>\(t=540\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.4/t0390.png" alt="Intermediate denoising step t=390" />
+                    <figcaption>\(t=390\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.4/t0240.png" alt="Intermediate denoising step t=240" />
+                    <figcaption>\(t=240\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.4/t0090.png" alt="Intermediate denoising step t=90" />
+                    <figcaption>\(t=90\).</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <!-- Part 1.5 -->
+        <section class="card glass" id="part-1-5">
+            <div class="section-anchor">Part 1.5</div>
+            <h2 style="margin-top:0;">Sampling from Pure Noise</h2>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                With <code>i_start = 0</code> and a pure Gaussian noise input, the iterative sampler becomes a text‑to‑image generator.
+                Below are samples for the prompt “a high quality photo” using the same seed and diffusion schedule.
+            </p>
+            <div class="row-5">
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.5/sample_1.png" alt="Diffusion sample 1" />
+                    <figcaption>Sample 1.</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.5/sample_2.png" alt="Diffusion sample 2" />
+                    <figcaption>Sample 2.</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.5/sample_3.png" alt="Diffusion sample 3" />
+                    <figcaption>Sample 3.</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.5/sample_4.png" alt="Diffusion sample 4" />
+                    <figcaption>Sample 4.</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.5/sample_5.png" alt="Diffusion sample 5" />
+                    <figcaption>Sample 5.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <!-- Part 1.6 -->
+        <section class="card glass" id="part-1-6">
+            <div class="section-anchor">Part 1.6</div>
+            <h2 style="margin-top:0;">Classifier‑Free Guidance (CFG)</h2>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                The sampler is extended to perform Classifier‑Free Guidance by running the UNet twice per step
+                (with conditional and unconditional text embeddings) and combining the noise estimates as
+                \(\epsilon_{\text{CFG}} = \epsilon_{\text{uncond}} + s\cdot(\epsilon_{\text{cond}} - \epsilon_{\text{uncond}})\).
+                A moderate guidance scale dramatically improves adherence to the prompt at the cost of diversity.
+            </p>
+            <div class="figrow wide" style="margin-top:10px;">
+                <div class="figcol">
+                    <figure>
+                        <img class="expandable thumb-lg" src="./part1/1.6/sample_cfg_1.png" alt="CFG sample 1" />
+                        <figcaption>CFG sample 1 – sharper, more photographic.</figcaption>
+                    </figure>
+                </div>
+                <div class="figcol">
+                    <figure>
+                        <img class="expandable thumb-lg" src="./part1/1.6/sample_cfg_2.png" alt="CFG sample 2" />
+                        <figcaption>CFG sample 2.</figcaption>
+                    </figure>
+                </div>
+                <div class="figcol">
+                    <figure>
+                        <img class="expandable thumb-lg" src="./part1/1.6/sample_cfg_3.png" alt="CFG sample 3" />
+                        <figcaption>CFG sample 3.</figcaption>
+                    </figure>
+                </div>
+            </div>
+        </section>
+
+        <!-- Part 1.7 -->
+        <section class="card glass" id="part-1-7">
+            <div class="section-anchor">Part 1.7</div>
+            <h2 style="margin-top:0;">Image‑to‑Image Translation (SDEdit)</h2>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                Using the forward process to add noise and then running iterative CFG‑guided denoising lets the model “edit”
+                an existing image while preserving its coarse structure. Lower noise levels make subtle edits, while higher
+                levels push the image closer to a fresh sample from the text‑conditioned manifold.
+            </p>
+            <h3 class="subsection-title">Campanile edits with different starting indices</h3>
+            <div class="row-7" style="margin-top:10px;">
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7/campanile_original.png" alt="Original Campanile for SDEdit" />
+                    <figcaption>Original Campanile.</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7/campanile_edit_i1_t960.png" alt="Campanile edit i_start=1" />
+                    <figcaption>\(i_{\text{start}}=1\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7/campanile_edit_i3_t900.png" alt="Campanile edit i_start=3" />
+                    <figcaption>\(i_{\text{start}}=3\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7/campanile_edit_i5_t840.png" alt="Campanile edit i_start=5" />
+                    <figcaption>\(i_{\text{start}}=5\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7/campanile_edit_i7_t780.png" alt="Campanile edit i_start=7" />
+                    <figcaption>\(i_{\text{start}}=7\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7/campanile_edit_i10_t690.png" alt="Campanile edit i_start=10" />
+                    <figcaption>\(i_{\text{start}}=10\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7/campanile_edit_i20_t390.png" alt="Campanile edit i_start=20" />
+                    <figcaption>\(i_{\text{start}}=20\).</figcaption>
+                </figure>
+            </div>
+
+            <h3 class="subsection-title" style="margin-top:20px;">Edits of my own test images</h3>
+            <h4 class="subsection-title" style="margin-top:8px;">Example 1</h4>
+            <div class="row-7">
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7_2/campanile_edit_original.png" alt="Own test image 1 original" />
+                    <figcaption>Original (own image 1).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7_2/campanile_edit_i1_t960.png" alt="Own image 1 edit i_start=1" />
+                    <figcaption>\(i_{\text{start}}=1\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7_2/campanile_edit_i3_t900.png" alt="Own image 1 edit i_start=3" />
+                    <figcaption>\(i_{\text{start}}=3\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7_2/campanile_edit_i5_t840.png" alt="Own image 1 edit i_start=5" />
+                    <figcaption>\(i_{\text{start}}=5\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7_2/campanile_edit_i7_t780.png" alt="Own image 1 edit i_start=7" />
+                    <figcaption>\(i_{\text{start}}=7\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7_2/campanile_edit_i10_t690.png" alt="Own image 1 edit i_start=10" />
+                    <figcaption>\(i_{\text{start}}=10\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7_2/campanile_edit_i20_t390.png" alt="Own image 1 edit i_start=20" />
+                    <figcaption>\(i_{\text{start}}=20\).</figcaption>
+                </figure>
+            </div>
+
+            <h4 class="subsection-title" style="margin-top:18px;">Example 2</h4>
+            <div class="row-7">
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7_3/campanile_edit_original.png" alt="Own test image 2 original" />
+                    <figcaption>Original (own image 2).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7_3/campanile_edit_i1_t960.png" alt="Own image 2 edit i_start=1" />
+                    <figcaption>\(i_{\text{start}}=1\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7_3/campanile_edit_i3_t900.png" alt="Own image 2 edit i_start=3" />
+                    <figcaption>\(i_{\text{start}}=3\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7_3/campanile_edit_i5_t840.png" alt="Own image 2 edit i_start=5" />
+                    <figcaption>\(i_{\text{start}}=5\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7_3/campanile_edit_i7_t780.png" alt="Own image 2 edit i_start=7" />
+                    <figcaption>\(i_{\text{start}}=7\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7_3/campanile_edit_i10_t690.png" alt="Own image 2 edit i_start=10" />
+                    <figcaption>\(i_{\text{start}}=10\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7_3/campanile_edit_i20_t390.png" alt="Own image 2 edit i_start=20" />
+                    <figcaption>\(i_{\text{start}}=20\).</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <!-- Part 1.7.1 -->
+        <section class="card glass" id="part-1-7-1">
+            <div class="section-anchor">Part 1.7.1</div>
+            <h2 style="margin-top:0;">Editing Hand‑Drawn &amp; Web Images</h2>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                SDEdit works especially well when starting from non‑photographic inputs (sketches) and web images. The diffusion
+                model hallucinates natural textures while loosely preserving the layout of the input.
+            </p>
+
+            <h3 class="subsection-title" style="margin-top:10px;">Web image example (apple)</h3>
+            <div class="row-7">
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7_4/campanile_edit_original.png" alt="Web image apple original" />
+                    <figcaption>Original web image.</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7_4/campanile_edit_i1_t960.png" alt="Web image edit i_start=1" />
+                    <figcaption>\(i_{\text{start}}=1\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7_4/campanile_edit_i3_t900.png" alt="Web image edit i_start=3" />
+                    <figcaption>\(i_{\text{start}}=3\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7_4/campanile_edit_i5_t840.png" alt="Web image edit i_start=5" />
+                    <figcaption>\(i_{\text{start}}=5\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7_4/campanile_edit_i7_t780.png" alt="Web image edit i_start=7" />
+                    <figcaption>\(i_{\text{start}}=7\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7_4/campanile_edit_i10_t690.png" alt="Web image edit i_start=10" />
+                    <figcaption>\(i_{\text{start}}=10\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7_4/campanile_edit_i20_t390.png" alt="Web image edit i_start=20" />
+                    <figcaption>\(i_{\text{start}}=20\).</figcaption>
+                </figure>
+            </div>
+
+            <h3 class="subsection-title" style="margin-top:18px;">Hand‑drawn example 1</h3>
+            <div class="row-7">
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7.1/drawn_original.png" alt="Hand-drawn original 1" />
+                    <figcaption>Original sketch.</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7.1/drawn_edit_i1_t960.png" alt="Hand-drawn 1 edit i_start=1" />
+                    <figcaption>\(i_{\text{start}}=1\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7.1/drawn_edit_i3_t900.png" alt="Hand-drawn 1 edit i_start=3" />
+                    <figcaption>\(i_{\text{start}}=3\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7.1/drawn_edit_i5_t840.png" alt="Hand-drawn 1 edit i_start=5" />
+                    <figcaption>\(i_{\text{start}}=5\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7.1/drawn_edit_i7_t780.png" alt="Hand-drawn 1 edit i_start=7" />
+                    <figcaption>\(i_{\text{start}}=7\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7.1/drawn_edit_i10_t690.png" alt="Hand-drawn 1 edit i_start=10" />
+                    <figcaption>\(i_{\text{start}}=10\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7.1/drawn_edit_i20_t390.png" alt="Hand-drawn 1 edit i_start=20" />
+                    <figcaption>\(i_{\text{start}}=20\).</figcaption>
+                </figure>
+            </div>
+
+            <h3 class="subsection-title" style="margin-top:18px;">Hand‑drawn example 2</h3>
+            <div class="row-7">
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7.1_2/drawn_original.png" alt="Hand-drawn original 2" />
+                    <figcaption>Original sketch.</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7.1_2/drawn_edit_i1_t960.png" alt="Hand-drawn 2 edit i_start=1" />
+                    <figcaption>\(i_{\text{start}}=1\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7.1_2/drawn_edit_i3_t900.png" alt="Hand-drawn 2 edit i_start=3" />
+                    <figcaption>\(i_{\text{start}}=3\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7.1_2/drawn_edit_i5_t840.png" alt="Hand-drawn 2 edit i_start=5" />
+                    <figcaption>\(i_{\text{start}}=5\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7.1_2/drawn_edit_i7_t780.png" alt="Hand-drawn 2 edit i_start=7" />
+                    <figcaption>\(i_{\text{start}}=7\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7.1_2/drawn_edit_i10_t690.png" alt="Hand-drawn 2 edit i_start=10" />
+                    <figcaption>\(i_{\text{start}}=10\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7.1_2/drawn_edit_i20_t390.png" alt="Hand-drawn 2 edit i_start=20" />
+                    <figcaption>\(i_{\text{start}}=20\).</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <!-- Part 1.7.2 -->
+        <section class="card glass" id="part-1-7-2">
+            <div class="section-anchor">Part 1.7.2</div>
+            <h2 style="margin-top:0;">Inpainting via Diffusion</h2>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                For inpainting, denoising is repeated while clamping pixels outside the masked region back to a noisy version
+                of the original image. This follows the RePaint strategy and lets the model “fill in” missing content while
+                keeping the context fixed.
+            </p>
+            <h3 class="subsection-title" style="margin-top:10px;">Campanile inpainting – run 1</h3>
+            <div class="grid-3" style="margin-top:6px;">
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7.2/campanile_original.png" alt="Inpainting original Campanile (run 1)" />
+                    <figcaption>Original image (run 1).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7.2/mask.png" alt="Inpainting mask (run 1)" />
+                    <figcaption>Mask (region to inpaint).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7.2/campanile_inpainted.png" alt="Inpainted Campanile result (run 1)" />
+                    <figcaption>Inpainted result (run 1).</figcaption>
+                </figure>
+            </div>
+
+            <h3 class="subsection-title" style="margin-top:16px;">Campanile inpainting – run 2</h3>
+            <div class="grid-3" style="margin-top:6px;">
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7.2_3/campanile_original.png" alt="Inpainting original Campanile (run 2)" />
+                    <figcaption>Original image (run 2).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7.2_3/mask.png" alt="Inpainting mask (run 2)" />
+                    <figcaption>Mask (region to inpaint).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7.2_3/campanile_inpainted.png" alt="Inpainted Campanile result (run 2)" />
+                    <figcaption>Inpainted result (run 2).</figcaption>
+                </figure>
+            </div>
+
+            <h3 class="subsection-title" style="margin-top:16px;">Campanile inpainting – run 3</h3>
+            <div class="grid-3" style="margin-top:6px;">
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7.2_4/campanile_original.png" alt="Inpainting original Campanile (run 3)" />
+                    <figcaption>Original image (run 3).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7.2_4/mask.png" alt="Inpainting mask (run 3)" />
+                    <figcaption>Mask (region to inpaint).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.7.2_4/campanile_inpainted.png" alt="Inpainted Campanile result (run 3)" />
+                    <figcaption>Inpainted result (run 3).</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <!-- Part 1.7.3 -->
+        <section class="card glass" id="part-1-7-3">
+            <div class="section-anchor">Part 1.7.3</div>
+            <h2 style="margin-top:0;">Text‑Conditional Image‑to‑Image Translation</h2>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                Finally, SDEdit is combined with stronger text prompts to steer the edits: instead of simply projecting back
+                to the “natural image manifold,” the model is guided toward images that both resemble the original and match
+                a new description (e.g., turning a landmark into a “rocket ship” scene).
+            </p>
+            <h3 class="subsection-title" style="margin-top:10px;">Example 1 – <span class="inline-prompts">“big frog near a lake” → Campanile</span></h3>
+            <div class="row-7">
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.8/campanile_original.png" alt="Original for text-conditional edit" />
+                    <figcaption>Original base image.</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.8/campanile_big_frog_i1_t960.png" alt="Campanile edit (big frog) i_start=1" />
+                    <figcaption>\(i_{\text{start}}=1\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.8/campanile_big_frog_i3_t900.png" alt="Campanile edit (big frog) i_start=3" />
+                    <figcaption>\(i_{\text{start}}=3\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.8/campanile_big_frog_i5_t840.png" alt="Campanile edit (big frog) i_start=5" />
+                    <figcaption>\(i_{\text{start}}=5\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.8/campanile_big_frog_i7_t780.png" alt="Campanile edit (big frog) i_start=7" />
+                    <figcaption>\(i_{\text{start}}=7\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.8/campanile_big_frog_i10_t690.png" alt="Campanile edit (big frog) i_start=10" />
+                    <figcaption>\(i_{\text{start}}=10\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.8/campanile_big_frog_i20_t390.png" alt="Campanile edit (big frog) i_start=20" />
+                    <figcaption>\(i_{\text{start}}=20\).</figcaption>
+                </figure>
+            </div>
+
+            <h3 class="subsection-title" style="margin-top:18px;">Example 2 – <span class="inline-prompts">“a rocket ship” → Bryce Canyon</span></h3>
+            <div class="row-7">
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.8_2/bryce_original.png" alt="Bryce original" />
+                    <figcaption>Bryce original.</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.8_2/bryce_rocket_ship_i1_t960.png" alt="Bryce edit (rocket ship) i_start=1" />
+                    <figcaption>\(i_{\text{start}}=1\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.8_2/bryce_rocket_ship_i3_t900.png" alt="Bryce edit (rocket ship) i_start=3" />
+                    <figcaption>\(i_{\text{start}}=3\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.8_2/bryce_rocket_ship_i5_t840.png" alt="Bryce edit (rocket ship) i_start=5" />
+                    <figcaption>\(i_{\text{start}}=5\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.8_2/bryce_rocket_ship_i7_t780.png" alt="Bryce edit (rocket ship) i_start=7" />
+                    <figcaption>\(i_{\text{start}}=7\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.8_2/bryce_rocket_ship_i10_t690.png" alt="Bryce edit (rocket ship) i_start=10" />
+                    <figcaption>\(i_{\text{start}}=10\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.8_2/bryce_rocket_ship_i20_t390.png" alt="Bryce edit (rocket ship) i_start=20" />
+                    <figcaption>\(i_{\text{start}}=20\).</figcaption>
+                </figure>
+            </div>
+
+            <h3 class="subsection-title" style="margin-top:18px;">Example 3 – <span class="inline-prompts">“big frog near a lake” → Car</span></h3>
+            <div class="row-7">
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.8_4/car_original.png" alt="Car original" />
+                    <figcaption>Car original.</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.8_4/car_big_frog_i1_t960.png" alt="Car edit (big frog) i_start=1" />
+                    <figcaption>\(i_{\text{start}}=1\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.8_4/car_big_frog_i3_t900.png" alt="Car edit (big frog) i_start=3" />
+                    <figcaption>\(i_{\text{start}}=3\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.8_4/car_big_frog_i5_t840.png" alt="Car edit (big frog) i_start=5" />
+                    <figcaption>\(i_{\text{start}}=5\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.8_4/car_big_frog_i7_t780.png" alt="Car edit (big frog) i_start=7" />
+                    <figcaption>\(i_{\text{start}}=7\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.8_4/car_big_frog_i10_t690.png" alt="Car edit (big frog) i_start=10" />
+                    <figcaption>\(i_{\text{start}}=10\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.8_4/car_big_frog_i20_t390.png" alt="Car edit (big frog) i_start=20" />
+                    <figcaption>\(i_{\text{start}}=20\).</figcaption>
+                </figure>
+            </div>
+
+            <h3 class="subsection-title" style="margin-top:18px;">Example 4 – <span class="inline-prompts">“photo of the moon” → Taipei skyline</span></h3>
+            <div class="row-7">
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.8_5/taipeh_original.png" alt="Taipei original" />
+                    <figcaption>Taipei original.</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.8_5/taipeh_moon_i1_t960.png" alt="Taipei edit (moon) i_start=1" />
+                    <figcaption>\(i_{\text{start}}=1\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.8_5/taipeh_moon_i3_t900.png" alt="Taipei edit (moon) i_start=3" />
+                    <figcaption>\(i_{\text{start}}=3\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.8_5/taipeh_moon_i5_t840.png" alt="Taipei edit (moon) i_start=5" />
+                    <figcaption>\(i_{\text{start}}=5\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.8_5/taipeh_moon_i7_t780.png" alt="Taipei edit (moon) i_start=7" />
+                    <figcaption>\(i_{\text{start}}=7\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.8_5/taipeh_moon_i10_t690.png" alt="Taipei edit (moon) i_start=10" />
+                    <figcaption>\(i_{\text{start}}=10\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.8_5/taipeh_moon_i20_t390.png" alt="Taipei edit (moon) i_start=20" />
+                    <figcaption>\(i_{\text{start}}=20\).</figcaption>
+                </figure>
+            </div>
+            <h3 class="subsection-title" style="margin-top:18px;">Example 5 – <span class="inline-prompts">“a rocket ship” → Campanile</span></h3>
+            <div class="row-7">
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.8_6/campanile_original.png" alt="Campanile original" />
+                    <figcaption>Campanile original.</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.8_6/campanile_rocket_ship_i1_t960.png" alt="Campanile edit (rocket ship) i_start=1" />
+                    <figcaption>\(i_{\text{start}}=1\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.8_6/campanile_rocket_ship_i3_t900.png" alt="Campanile edit (rocket ship) i_start=3" />
+                    <figcaption>\(i_{\text{start}}=3\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.8_6/campanile_rocket_ship_i5_t840.png" alt="Campanile edit (rocket ship) i_start=5" />
+                    <figcaption>\(i_{\text{start}}=5\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.8_6/campanile_rocket_ship_i7_t780.png" alt="Campanile edit (rocket ship) i_start=7" />
+                    <figcaption>\(i_{\text{start}}=7\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.8_6/campanile_rocket_ship_i10_t690.png" alt="Campanile edit (rocket ship) i_start=10" />
+                    <figcaption>\(i_{\text{start}}=10\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.8_6/campanile_rocket_ship_i20_t390.png" alt="Campanile edit (rocket ship) i_start=20" />
+                    <figcaption>\(i_{\text{start}}=20\).</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <!-- Part 1.8 -->
+        <section class="card glass" id="part-1-8">
+            <div class="section-anchor">Part 1.8</div>
+            <h2 style="margin-top:0;">Visual Anagrams</h2>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                To create visual anagrams, an image is jointly denoised upright and rotated by 180°, using two different prompts
+                and averaging the noise estimates (flipping back the rotated one). The resulting image looks like one concept
+                upright and another when flipped upside‑down.
+            </p>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                Concretely, at each step \(t\) two CFG noise estimates are computed and averaged:
+            </p>
+            <p class="muted" style="max-width:860px;margin:0 auto 14px;">
+                \[
+                \epsilon_1=\text{CFG}(\text{UNet}(x_t,t,p_1)),\quad
+                \epsilon_2=\text{flip}(\text{CFG}(\text{UNet}(\text{flip}(x_t),t,p_2))),\quad
+                \epsilon=\frac{\epsilon_1+\epsilon_2}{2}.
+                \]
+            </p>
+            <h3 class="subsection-title" style="margin-top:14px;">Example 1 – <span class="inline-prompts">‘an oil painting of an old man’ / ‘an oil painting of people around a campfire’</span></h3>
+            <div class="grid-2" style="margin-top:6px;">
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.9/illusion_upright.png" alt="Visual anagram Example 1 upright" />
+                    <figcaption>Upright: ‘an oil painting of an old man’.</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.9/illusion_flipped.png" alt="Visual anagram Example 1 flipped" />
+                    <figcaption>Flipped: ‘an oil painting of people around a campfire’.</figcaption>
+                </figure>
+            </div>
+
+            <h3 class="subsection-title" style="margin-top:18px;">Example 2 – <span class="inline-prompts">‘a painting of a deer’ / ‘a painting of houseplants’</span></h3>
+            <div class="grid-2" style="margin-top:6px;">
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.9_2/illusion_upright.png" alt="Visual anagram Example 2 upright" />
+                    <figcaption>Upright: ‘a painting of a deer’.</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.9_2/illusion_flipped.png" alt="Visual anagram Example 2 flipped" />
+                    <figcaption>Flipped: ‘a painting of houseplants’.</figcaption>
+                </figure>
+            </div>
+
+            <h3 class="subsection-title" style="margin-top:18px;">Example 3 – <span class="inline-prompts">‘a painting of a fox’ / ‘a painting of a fruit bowl’</span></h3>
+            <div class="grid-2" style="margin-top:6px;">
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.9_3/illusion_upright.png" alt="Visual anagram Example 3 upright" />
+                    <figcaption>Upright: ‘a painting of a fox’.</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.9_3/illusion_flipped.png" alt="Visual anagram Example 3 flipped" />
+                    <figcaption>Flipped: ‘a painting of a fruit bowl’.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <!-- Part 1.9 -->
+        <section class="card glass" id="part-1-9">
+            <div class="section-anchor">Part 1.9</div>
+            <h2 style="margin-top:0;">Hybrid Images with Factorized Diffusion</h2>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                Inspired by classical hybrid images, a composite noise estimate is formed by taking low frequencies from one
+                prompt’s noise and high frequencies from another (using Gaussian blur and subtraction). Running the diffusion
+                sampler with this hybrid noise produces images that read as one concept from afar and another up close.
+            </p>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                In the examples below, the <b>left prompt</b> supplies the <b>high‑frequency</b> content, and the <b>right prompt</b>
+                supplies the <b>low‑frequency</b> content.
+            </p>
+            <h3 class="subsection-title" style="margin-top:10px;">Hybrid Example 1 – <span class="inline-prompts">High‑freq (left): ‘a lithograph of a skull’ / Low‑freq (right): ‘a lithograph of waterfalls’</span></h3>
+            <div class="grid-2" style="margin-top:6px;">
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.10/hybrid.png" alt="Hybrid Example 1 final hybrid (skull + waterfalls)" />
+                    <figcaption>Final hybrid (high‑freq ‘a lithograph of a skull’ + low‑freq ‘a lithograph of waterfalls’).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.10/hybrid_blurred.png" alt="Hybrid Example 1 low-frequency component (waterfalls)" />
+                    <figcaption>Low‑freq component (right prompt): ‘a lithograph of waterfalls’.</figcaption>
+                </figure>
+            </div>
+
+            <h3 class="subsection-title" style="margin-top:18px;">Hybrid Example 2 – <span class="inline-prompts">High‑freq (left): ‘an oil painting of a snowy forest at night’ / Low‑freq (right): ‘a painting of a teddy bear’</span></h3>
+            <div class="grid-2" style="margin-top:6px;">
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.10_2/hybrid.png" alt="Hybrid Example 2 final hybrid (forest + teddy bear)" />
+                    <figcaption>Final hybrid (high‑freq ‘an oil painting of a snowy forest at night’ + low‑freq ‘a painting of a teddy bear’).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.10_2/hybrid_blurred.png" alt="Hybrid Example 2 low-frequency component (teddy bear)" />
+                    <figcaption>Low‑freq component (right prompt): ‘a painting of a teddy bear’.</figcaption>
+                </figure>
+            </div>
+
+            <h3 class="subsection-title" style="margin-top:18px;">Hybrid Example 3 – <span class="inline-prompts">High‑freq (left): ‘big frog near a lake’ / Low‑freq (right): ‘a surfer surfing a wave’</span></h3>
+            <div class="grid-2" style="margin-top:6px;">
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.10_3/hybrid.png" alt="Hybrid Example 3 final hybrid (frog + surfer)" />
+                    <figcaption>Final hybrid (high‑freq ‘big frog near a lake’ + low‑freq ‘a surfer surfing a wave’).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/1.10_3/hybrid_blurred.png" alt="Hybrid Example 3 low-frequency component (surfer)" />
+                    <figcaption>Low‑freq component (right prompt): ‘a surfer surfing a wave’.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <!-- Part A Bells & Whistles -->
+        <section class="card glass" id="part-a-bells">
+            <div class="section-anchor">Part A – Bells &amp; Whistles</div>
+            <h2 style="margin-top:0;">Extra Visual Anagrams &amp; Custom Logo</h2>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                For additional visual anagrams, other transformations beyond simple flips are used, such as 90°
+                rotations and intensity inversion, and text‑conditional edits are applied to create a course‑style logo.
+            </p>
+            <h3 class="subsection-title" style="margin-top:10px;">Rotation-based visual anagrams</h3>
+            <h4 class="subsection-title" style="margin-top:8px;">Example 1 – <span class="inline-prompts">‘a watercolor painting of a village in the mountains’ / ‘a watercolor painting of a ship at sea’</span></h4>
+            <div class="grid-2" style="margin-top:6px;">
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/2.0/rot90_upright.png" alt="Rotation-based anagram upright" />
+                    <figcaption>Example 1 – upright: ‘a watercolor painting of a village in the mountains’.</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/2.0/rot90_rotated.png" alt="Rotation-based anagram rotated" />
+                    <figcaption>Example 1 – rotated 90°: ‘a watercolor painting of a ship at sea’.</figcaption>
+                </figure>
+            </div>
+            <h4 class="subsection-title" style="margin-top:14px;">Example 2 – <span class="inline-prompts">‘a painting of a rabbit’ / ‘a painting of a duck’</span></h4>
+            <div class="grid-2" style="margin-top:10px;">
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/2.0_2/rot90_upright.png" alt="Rotation-based anagram Example 2 upright" />
+                    <figcaption>Example 2 – upright: ‘a painting of a rabbit’.</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/2.0_2/rot90_rotated.png" alt="Rotation-based anagram Example 2 rotated" />
+                    <figcaption>Example 2 – rotated 90°: ‘a painting of a duck’.</figcaption>
+                </figure>
+            </div>
+
+            <h3 class="subsection-title" style="margin-top:18px;">Intensity-based visual anagrams</h3>
+            <h4 class="subsection-title" style="margin-top:8px;">Example 1 – <span class="inline-prompts">‘a painting of a rabbit’ / ‘a painting of a duck’</span></h4>
+            <div class="grid-2" style="margin-top:6px;">
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/2.1/neg_upright.png" alt="Negative-based anagram upright" />
+                    <figcaption>Example 1 – upright: ‘a painting of a rabbit’.</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/2.1/neg_inverted.png" alt="Negative-based anagram inverted" />
+                    <figcaption>Example 1 – color inverse: ‘a painting of a duck’.</figcaption>
+                </figure>
+            </div>
+            <h4 class="subsection-title" style="margin-top:14px;">Example 2 – <span class="inline-prompts">‘a pencil sketch of a cat’ / ‘a pencil sketch of a bicycle’</span></h4>
+            <div class="grid-2" style="margin-top:10px;">
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/2.1_2/neg_upright.png" alt="Negative-based anagram Example 2 upright" />
+                    <figcaption>Example 2 – upright: ‘a pencil sketch of a cat’.</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/2.1_2/neg_inverted.png" alt="Negative-based anagram Example 2 inverted" />
+                    <figcaption>Example 2 – color inverse: ‘a pencil sketch of a bicycle’.</figcaption>
+                </figure>
+            </div>
+            <h3 class="subsection-title" style="margin-top:18px;">Logo: text‑conditional image‑to‑image iterations</h3>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                Prompt: <i>“a simple vector logo of a pixelated eye for UC Berkeley CS 280A”</i>.
+            </p>
+            <div class="grid-4" style="margin-top:6px;">
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/2.2_3/logo_edit_i_start_3.png" alt="Logo edit i_start=3" />
+                    <figcaption>\(i_{\text{start}}=3\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/2.2_3/logo_edit_i_start_7.png" alt="Logo edit i_start=7" />
+                    <figcaption>\(i_{\text{start}}=7\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/2.2_3/logo_edit_i_start_12.png" alt="Logo edit i_start=12" />
+                    <figcaption>\(i_{\text{start}}=12\) (final pick).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/2.2_3/logo_edit_i_start_20.png" alt="Logo edit i_start=20" />
+                    <figcaption>\(i_{\text{start}}=20\).</figcaption>
+                </figure>
+            </div>
+
+            <h3 class="subsection-title" style="margin-top:16px;">Final logo pick</h3>
+            <div class="grid-2" style="margin-top:6px; justify-items:center;">
+                <figure>
+                    <img class="expandable thumb-lg" src="./part1/2.2_3/logo_edit_i_start_12.png" alt="Final course logo edit" />
+                    <figcaption>Chosen diffusion‑edited course logo.</figcaption>
+                </figure>
+            </div>
+            <p class="muted" style="max-width:860px;margin:12px auto 0;">
+                This final logo was chosen because it clearly features an “eye” in the center (the best camera ever) and a pixelation motif,
+                tying directly to computer vision and image representation in this course.
+            </p>
+        </section>
+
+        <!-- Part B – Flow Matching from Scratch -->
+        <section class="card glass" id="part-b">
+            <div class="section-anchor">Part B</div>
+            <h2 style="margin-top:0;">Flow Matching from Scratch!</h2>
+            <p class="muted" style="max-width:860px;margin:0 auto 0;">
+                Part B trains UNet‑based denoisers and flow‑matching models on MNIST, progressing from a single‑step denoiser to time‑ and class‑conditioned iterative generators.
+            </p>
+        </section>
+
+        <section class="card glass" id="part-b-1-1">
+            <div class="section-anchor">Part B 1.1</div>
+            <h2 style="margin-top:0;">UNet architecture (single‑step denoiser)</h2>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                The one‑step denoiser uses a standard UNet with downsampling/upsampling blocks and skip connections.
+            </p>
+            <div class="grid-1 mnist-wide mnist-center" style="margin-top:10px;">
+                <figure>
+                    <img class="expandable" src="./part2/part1_1/uncond_unet.png" alt="Unconditional UNet architecture diagram" />
+                    <figcaption>Unconditional UNet architecture.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="card glass" id="part-b-1-2">
+            <div class="section-anchor">Part B 1.2</div>
+            <h2 style="margin-top:0;">Using the UNet to train a denoiser</h2>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                The effect of varying noise level \(\sigma\) on MNIST digits is visualized by directly applying Gaussian noise to clean images.
+            </p>
+            <p class="muted" style="max-width:860px;margin:0 auto 14px;">
+                \[
+                \mathcal{L}=\mathbb{E}_{z,x}\left[\left\lVert D_{\theta}(z)-x\right\rVert^2\right]
+                \qquad
+                z = x + \sigma \epsilon,\;\;\epsilon \sim \mathcal{N}(0, I).
+                \]
+            </p>
+            <div class="grid-1 mnist-narrow mnist-center" style="margin-top:10px;">
+                <figure>
+                    <img class="expandable" src="./part2/outputs_part1_2/noising_process.png" alt="Noising process for different sigmas" />
+                    <figcaption>Noising process: as \(\sigma\) increases, digits gradually disappear into noise.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="card glass" id="part-b-1-2-1">
+            <div class="section-anchor">Part B 1.2.1</div>
+            <h2 style="margin-top:0;">Training a single‑step denoising UNet</h2>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                The UNet is trained to denoise MNIST digits noised with \(\sigma = 0.5\) using an \(\ell_2\) reconstruction loss.
+            </p>
+            <p class="muted" style="max-width:860px;margin:0 auto 14px;">
+                \[
+                \mathcal{L}=\mathbb{E}_{z,x}\left[\left\lVert D_{\theta}(z)-x\right\rVert^2\right]
+                \]
+            </p>
+            <div class="grid-1 mnist-narrow mnist-center" style="margin-top:10px;">
+                <figure>
+                    <img class="expandable" src="./part2/outputs_part1_2/training_loss_curve.png" alt="Training loss curve for single-step denoiser" />
+                    <figcaption>Training loss curve for the single‑step denoiser over 5 epochs.</figcaption>
+                </figure>
+            </div>
+            <div class="grid-1 mnist-tight mnist-center" style="margin-top:10px;">
+                <figure>
+                    <img class="expandable" src="./part2/outputs_part1_2/denoising_examples_epoch1.png" alt="Denoising examples after 1 epoch" />
+                    <figcaption>Denoising at \(\sigma = 0.5\) after 1 epoch.</figcaption>
+                </figure>
+            </div>
+            <div class="grid-1 mnist-tight mnist-center" style="margin-top:10px;">
+                <figure>
+                    <img class="expandable" src="./part2/outputs_part1_2/denoising_examples_epoch5.png" alt="Denoising examples after 5 epochs" />
+                    <figcaption>Denoising at \(\sigma = 0.5\) after 5 epochs.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="card glass" id="part-b-1-2-2">
+            <div class="section-anchor">Part B 1.2.2</div>
+            <h2 style="margin-top:0;">Out‑of‑distribution testing</h2>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                Holding the same test digits fixed and varying \(\sigma\). The model was trained at \(\sigma=0.5\), so it performs best near that noise level.
+            </p>
+            <div class="grid-3 fixed3" style="margin-top:8px;">
+                <figure>
+                    <img class="expandable" src="./part2/outputs_part1_2/ood_denoising_sigma_0.0.png" alt="OOD denoising sigma 0.0" />
+                    <figcaption>\(\sigma=0.0\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable" src="./part2/outputs_part1_2/ood_denoising_sigma_0.2.png" alt="OOD denoising sigma 0.2" />
+                    <figcaption>\(\sigma=0.2\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable" src="./part2/outputs_part1_2/ood_denoising_sigma_0.4.png" alt="OOD denoising sigma 0.4" />
+                    <figcaption>\(\sigma=0.4\).</figcaption>
+                </figure>
+            </div>
+            <div class="mnist-ood-row" style="margin-top:10px;">
+                <figure>
+                    <img class="expandable" src="./part2/outputs_part1_2/ood_denoising_sigma_0.5.png" alt="OOD denoising sigma 0.5" />
+                    <figcaption>\(\sigma=0.5\) (train).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable" src="./part2/outputs_part1_2/ood_denoising_sigma_0.6.png" alt="OOD denoising sigma 0.6" />
+                    <figcaption>\(\sigma=0.6\).</figcaption>
+                </figure>
+            </div>
+            <div class="mnist-ood-row" style="margin-top:10px;">
+                <figure>
+                    <img class="expandable" src="./part2/outputs_part1_2/ood_denoising_sigma_0.8.png" alt="OOD denoising sigma 0.8" />
+                    <figcaption>\(\sigma=0.8\).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable" src="./part2/outputs_part1_2/ood_denoising_sigma_1.0.png" alt="OOD denoising sigma 1.0" />
+                    <figcaption>\(\sigma=1.0\).</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="card glass" id="part-b-1-2-3">
+            <div class="section-anchor">Part B 1.2.3</div>
+            <h2 style="margin-top:0;">Denoising pure noise</h2>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                The UNet is retrained to map pure Gaussian noise directly to clean digits. With an MSE loss the model tends to predict “average” digit shapes.
+            </p>
+            <div class="grid-1 mnist-narrow mnist-center" style="margin-top:10px;">
+                <figure>
+                    <img class="expandable" src="./part2/outputs_part1_2_pure_noise/training_loss_curve_pure_noise.png" alt="Training loss curve for pure-noise denoiser" />
+                    <figcaption>Training loss curve when denoising pure noise for 5 epochs.</figcaption>
+                </figure>
+            </div>
+            <div class="grid-1 mnist-tight mnist-center" style="margin-top:10px;">
+                <figure>
+                    <img class="expandable" src="./part2/outputs_part1_2_pure_noise/pure_noise_examples_epoch1.png" alt="Pure noise denoising after 1 epoch" />
+                    <figcaption>After 1 epoch.</figcaption>
+                </figure>
+            </div>
+            <div class="grid-1 mnist-tight mnist-center" style="margin-top:10px;">
+                <figure>
+                    <img class="expandable" src="./part2/outputs_part1_2_pure_noise/pure_noise_examples_epoch5.png" alt="Pure noise denoising after 5 epochs" />
+                    <figcaption>After 5 epochs.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="card glass" id="part-b-2">
+            <div class="section-anchor">Part B 2</div>
+            <h2 style="margin-top:0;">Training a flow matching model</h2>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                For iterative generation, flow matching is used: interpolate between noise \(x_0\sim\mathcal{N}(0,I)\) and a clean sample \(x_1\), define the flow field, and train a UNet to predict it.
+            </p>
+            <p class="muted" style="max-width:860px;margin:0 auto 14px;">
+                \[
+                x_t=(1-t)x_0 + t x_1,\;\; t\in[0,1],
+                \qquad
+                u(x_t,t)=\frac{d}{dt}x_t=x_1-x_0,
+                \]
+                \[
+                \mathcal{L}=\mathbb{E}_{x_0\sim p_0(x_0),\,x_1\sim p_1(x_1),\,t\sim U[0,1]}\left[\left\lVert (x_1-x_0)-u_\theta(x_t,t)\right\rVert^2\right].
+                \]
+            </p>
+        </section>
+
+        <section class="card glass" id="part-b-2-1">
+            <div class="section-anchor">Part B 2.1</div>
+            <h2 style="margin-top:0;">Adding time conditioning to UNet</h2>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                Scalar time \(t\in[0,1]\) is injected into the UNet via FCBlocks, modulating intermediate feature maps as in the handout.
+            </p>
+            <div class="grid-1 mnist-wide mnist-center" style="margin-top:10px;">
+                <figure>
+                    <img class="expandable" src="./part2/part2_1/timecond_unet.png" alt="Time-conditioned UNet architecture diagram" />
+                    <figcaption>Time‑conditioned UNet with FCBlock conditioning.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="card glass" id="part-b-2-2">
+            <div class="section-anchor">Part B 2.2</div>
+            <h2 style="margin-top:0;">Time‑conditioned UNet training</h2>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                Training samples \(x_1\), \(t\sim U[0,1]\), and \(x_0\sim \mathcal{N}(0,I)\), constructs \(x_t=(1-t)x_0+tx_1\), and trains \(u_\theta(x_t,t)\) to match \(x_1-x_0\).
+            </p>
+            <div class="grid-1 mnist-narrow mnist-center" style="margin-top:8px;">
+                <figure>
+                    <img class="expandable" src="./part2/outputs_part2_2/training.png" alt="Algorithm for training time-conditioned UNet" />
+                    <figcaption>Algorithm: training the time‑conditioned UNet.</figcaption>
+                </figure>
+            </div>
+            <div class="grid-1 mnist-narrow mnist-center" style="margin-top:8px;">
+                <figure>
+                    <img class="expandable" src="./part2/outputs_part2_2/training_loss_curve_time_unet.png" alt="Training loss curve for time-conditioned UNet" />
+                    <figcaption>Training loss curve for the time‑conditioned UNet.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="card glass" id="part-b-2-3">
+            <div class="section-anchor">Part B 2.3</div>
+            <h2 style="margin-top:0;">Sampling from time‑conditioned UNet</h2>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                Each image below is a grid of multiple samples (top row: initial noise; bottom row: final generated digits).
+            </p>
+            <div class="grid-1 mnist-narrow mnist-center" style="margin-top:8px;">
+                <figure>
+                    <img class="expandable" src="./part2/outputs_part2_3/sampling.png" alt="Algorithm for sampling from time-conditioned UNet" />
+                    <figcaption>Algorithm: sampling from the time‑conditioned UNet.</figcaption>
+                </figure>
+            </div>
+            <div class="grid-1 mnist-narrow mnist-center" style="margin-top:8px;">
+                <figure>
+                    <img class="expandable" src="./part2/outputs_part2_3/time_unet_samples_epoch1.png" alt="Time-conditioned UNet sampling grid epoch 1" />
+                    <figcaption>Epoch 1.</figcaption>
+                </figure>
+            </div>
+            <div class="grid-1 mnist-narrow mnist-center" style="margin-top:10px;">
+                <figure>
+                    <img class="expandable" src="./part2/outputs_part2_3/time_unet_samples_epoch5.png" alt="Time-conditioned UNet sampling grid epoch 5" />
+                    <figcaption>Epoch 5.</figcaption>
+                </figure>
+            </div>
+            <div class="grid-1 mnist-narrow mnist-center" style="margin-top:10px;">
+                <figure>
+                    <img class="expandable" src="./part2/outputs_part2_3/time_unet_samples_epoch10.png" alt="Time-conditioned UNet sampling grid epoch 10" />
+                    <figcaption>Epoch 10.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="card glass" id="part-b-2-5">
+            <div class="section-anchor">Part B 2.5</div>
+            <h2 style="margin-top:0;">Class‑conditioned UNet training</h2>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                Class conditioning \(c\) (one‑hot) is added with conditional dropout to enable classifier‑free guidance.
+            </p>
+            <div class="grid-1 mnist-narrow mnist-center" style="margin-top:8px;">
+                <figure>
+                    <img class="expandable" src="./part2/outputs_part2_5/class-cond_training.png" alt="Algorithm for training class-conditioned UNet" />
+                    <figcaption>Algorithm: training the class‑conditioned UNet.</figcaption>
+                </figure>
+            </div>
+            <div class="grid-1 mnist-narrow mnist-center" style="margin-top:8px;">
+                <figure>
+                    <img class="expandable" src="./part2/outputs_part2_5/training_loss_curve_class_unet.png" alt="Training loss curve for class-conditioned UNet" />
+                    <figcaption>Training loss curve for the class‑conditioned UNet.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="card glass" id="part-b-2-6">
+            <div class="section-anchor">Part B 2.6</div>
+            <h2 style="margin-top:0;">Sampling from class‑conditioned UNet</h2>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                Class‑conditional sampling uses classifier‑free guidance to combine unconditional and conditional flows.
+            </p>
+            <div class="grid-1 mnist-narrow mnist-center" style="margin-top:8px;">
+                <figure>
+                    <img class="expandable" src="./part2/outputs_part2_6/class_cond_sampling.png" alt="Algorithm for class-conditional sampling with classifier-free guidance" />
+                    <figcaption>Algorithm: class‑conditional sampling with CFG.</figcaption>
+                </figure>
+            </div>
+            <div class="mnist-samples-row" style="margin-top:10px;">
+                <figure>
+                    <img class="expandable" src="./part2/outputs_part2_6/class_unet_samples_epoch1.png" alt="Class-conditioned UNet samples epoch 1" />
+                    <figcaption>Epoch 1.</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable" src="./part2/outputs_part2_6/class_unet_samples_epoch5.png" alt="Class-conditioned UNet samples epoch 5" />
+                    <figcaption>Epoch 5.</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable" src="./part2/outputs_part2_6/class_unet_samples_epoch10.png" alt="Class-conditioned UNet samples epoch 10" />
+                    <figcaption>Epoch 10 – sharp, class‑conditional digits (4 samples per class).</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="card glass" id="part-b-3">
+            <div class="section-anchor">Part B 3</div>
+            <h2 style="margin-top:0;">Bells &amp; Whistles: improved time‑conditioned UNet</h2>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                The time‑only model is improved by extending training (up to 20 epochs), leading to sharper digits and fewer collapsed “average” shapes.
+            </p>
+            <div class="grid-1 mnist-narrow mnist-center" style="margin-top:8px;">
+                <figure>
+                    <img class="expandable" src="./part2/outputs_part2_2_improved/training_loss_curve_time_unet.png" alt="Training loss curve for improved time-conditioned UNet" />
+                    <figcaption>Improved model – training loss curve.</figcaption>
+                </figure>
+            </div>
+            <div class="mnist-samples-row-4" style="margin-top:10px;">
+                <figure>
+                    <img class="expandable" src="./part2/outputs_part2_2_improved/time_unet_samples_epoch1.png" alt="Improved time-conditioned UNet sampling grid epoch 1" />
+                    <figcaption>Epoch 1.</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable" src="./part2/outputs_part2_2_improved/time_unet_samples_epoch5.png" alt="Improved time-conditioned UNet sampling grid epoch 5" />
+                    <figcaption>Epoch 5.</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable" src="./part2/outputs_part2_2_improved/time_unet_samples_epoch10.png" alt="Improved time-conditioned UNet sampling grid epoch 10" />
+                    <figcaption>Epoch 10.</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable" src="./part2/outputs_part2_2_improved/time_unet_samples_epoch20.png" alt="Improved time-conditioned UNet sampling grid epoch 20" />
+                    <figcaption>Epoch 20.</figcaption>
+                </figure>
+                <figure class="span-2">
+                    <img class="expandable" src="./part2/outputs_part2_2_improved/time_unet_samples_epoch30.png" alt="Improved time-conditioned UNet sampling grid epoch 30" />
+                    <figcaption>Epoch 30.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+    </div>
+
+    <div id="lightbox" class="lightbox-backdrop" aria-hidden="true">
+        <img class="lightbox-img" alt="">
+    </div>
+    <script>
+    (function() {
+        var backdrop = document.getElementById('lightbox');
+        var imgEl = backdrop ? backdrop.querySelector('.lightbox-img') : null;
+        if (!backdrop || !imgEl) return;
+        function openLightbox(src, alt) {
+            imgEl.src = src;
+            imgEl.alt = alt || '';
+            backdrop.classList.add('open');
+            backdrop.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeLightbox() {
+            backdrop.classList.remove('open');
+            backdrop.setAttribute('aria-hidden', 'true');
+            imgEl.src = '';
+            document.body.style.overflow = '';
+        }
+        backdrop.addEventListener('click', closeLightbox);
+        imgEl.addEventListener('click', function(ev) { ev.stopPropagation(); });
+        document.addEventListener('keydown', function(ev) {
+            if (ev.key === 'Escape' && backdrop.classList.contains('open')) {
+                closeLightbox();
+            }
+        });
+        Array.prototype.forEach.call(document.querySelectorAll('img.expandable'), function(el) {
+            el.addEventListener('click', function() {
+                openLightbox(el.src, el.alt);
+            });
+        });
+    })();
+    </script>
+</body>
+</html>
+
+
+
+
+

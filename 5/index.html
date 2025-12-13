@@ -1601,6 +1601,10 @@
                 With CFG, the conditional signal is strengthened without changing the underlying sampler: \(\gamma\) trades off diversity and fidelity. The grids below show 4 samples per class; by later epochs the model
                 typically produces more consistent digits per class and fewer cross‑class confusions.
             </p>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                I also tested removing the exponential learning‑rate scheduler. This is generally possible, but I had to start with a smaller learning rate—otherwise updates were too large and training became unstable.
+                With too small of a fixed learning rate, progress can slow or get stuck, so the scheduler is a cleaner way to balance stability early and refinement later.
+            </p>
             <div class="grid-1 mnist-narrow mnist-center" style="margin-top:8px;">
                 <figure>
                     <img class="expandable" src="./part2/outputs_part2_6/class_cond_sampling.png" alt="Algorithm for class-conditional sampling with classifier-free guidance" />

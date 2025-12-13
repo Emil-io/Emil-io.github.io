@@ -1428,6 +1428,10 @@
             <p class="muted" style="max-width:860px;margin:0 auto 10px;">
                 For iterative generation, flow matching is used: interpolate between noise \(x_0\sim\mathcal{N}(0,I)\) and a clean sample \(x_1\), define the flow field, and train a UNet to predict it.
             </p>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                The key difference from the single‑step denoiser is that this model learns a <i>vector field</i> over time. Instead of predicting a clean image directly in one shot, it predicts how to move a sample
+                from the noise distribution toward the data distribution as \(t\) increases.
+            </p>
             <p class="muted" style="max-width:860px;margin:0 auto 14px;">
                 \[
                 x_t=(1-t)x_0 + t x_1,\;\; t\in[0,1],
@@ -1446,6 +1450,10 @@
             <p class="muted" style="max-width:860px;margin:0 auto 10px;">
                 Scalar time \(t\in[0,1]\) is injected into the UNet via FCBlocks, modulating intermediate feature maps as in the handout.
             </p>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                Intuitively, small \(t\) corresponds to “mostly noise” and large \(t\) corresponds to “mostly data.” Conditioning lets one network share parameters across all timesteps while still behaving differently
+                depending on where along the trajectory the current sample lies.
+            </p>
             <div class="grid-1 mnist-wide mnist-center" style="margin-top:10px;">
                 <figure>
                     <img class="expandable" src="./part2/part2_1/timecond_unet.png" alt="Time-conditioned UNet architecture diagram" />
@@ -1459,6 +1467,13 @@
             <h2 style="margin-top:0;">Time‑conditioned UNet training</h2>
             <p class="muted" style="max-width:860px;margin:0 auto 10px;">
                 Training samples \(x_1\), \(t\sim U[0,1]\), and \(x_0\sim \mathcal{N}(0,I)\), constructs \(x_t=(1-t)x_0+tx_1\), and trains \(u_\theta(x_t,t)\) to match \(x_1-x_0\).
+            </p>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                Because \(t\) is resampled every iteration, the model sees a continuum of interpolation levels during training. This encourages a smooth flow field and improves stability compared to training on a small
+                fixed set of noise levels.
+            </p>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                The loss curve below should decrease as the model learns to predict the correct direction of motion (from noise toward digits). Minor oscillations are expected due to different \(t\) values and batch content.
             </p>
             <div class="grid-1 mnist-narrow mnist-center" style="margin-top:8px;">
                 <figure>
@@ -1479,6 +1494,10 @@
             <h2 style="margin-top:0;">Sampling from time‑conditioned UNet</h2>
             <p class="muted" style="max-width:860px;margin:0 auto 10px;">
                 Each image below is a grid of multiple samples (top row: initial noise; bottom row: final generated digits).
+            </p>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                Sampling integrates the learned flow from \(t=0\) to \(t=1\) using \(T\) discrete steps (Euler). Early in training (Epoch 1) samples tend to be faint or malformed; by later epochs, digits become
+                higher contrast with clearer strokes.
             </p>
             <div class="grid-1 mnist-narrow mnist-center" style="margin-top:8px;">
                 <figure>
@@ -1512,6 +1531,10 @@
             <p class="muted" style="max-width:860px;margin:0 auto 10px;">
                 Class conditioning \(c\) (one‑hot) is added with conditional dropout to enable classifier‑free guidance.
             </p>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                Conditioning provides two benefits: it reduces ambiguity (the model knows which digit manifold to target) and it improves controllability at sampling time. Conditional dropout is important because it trains
+                the same network to also operate without class information, enabling an unconditional path for CFG.
+            </p>
             <div class="grid-1 mnist-narrow mnist-center" style="margin-top:8px;">
                 <figure>
                     <img class="expandable" src="./part2/outputs_part2_5/class-cond_training.png" alt="Algorithm for training class-conditioned UNet" />
@@ -1531,6 +1554,10 @@
             <h2 style="margin-top:0;">Sampling from class‑conditioned UNet</h2>
             <p class="muted" style="max-width:860px;margin:0 auto 10px;">
                 Class‑conditional sampling uses classifier‑free guidance to combine unconditional and conditional flows.
+            </p>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                With CFG, the conditional signal is strengthened without changing the underlying sampler: \(\gamma\) trades off diversity and fidelity. The grids below show 4 samples per class; by later epochs the model
+                typically produces more consistent digits per class and fewer cross‑class confusions.
             </p>
             <div class="grid-1 mnist-narrow mnist-center" style="margin-top:8px;">
                 <figure>
@@ -1559,6 +1586,10 @@
             <h2 style="margin-top:0;">Bells &amp; Whistles: improved time‑conditioned UNet</h2>
             <p class="muted" style="max-width:860px;margin:0 auto 10px;">
                 The time‑only model is improved by increasing the hidden dimension to 128 and extending training to 30 epochs, leading to sharper digits and fewer collapsed “average” shapes.
+            </p>
+            <p class="muted" style="max-width:860px;margin:0 auto 10px;">
+                Increasing capacity (larger hidden dimension) helps the network represent a more accurate flow field, while longer training reduces underfitting. Qualitatively, later‑epoch samples show cleaner strokes and
+                better separation between background and digit foreground compared to earlier epochs.
             </p>
             <div class="grid-1 mnist-narrow mnist-center" style="margin-top:8px;">
                 <figure>

@@ -1602,8 +1602,9 @@
                 typically produces more consistent digits per class and fewer cross‑class confusions.
             </p>
             <p class="muted" style="max-width:860px;margin:0 auto 10px;">
-                I also tested removing the exponential learning‑rate scheduler. This is generally possible, but I had to start with a smaller learning rate—otherwise updates were too large and training became unstable.
-                With too small of a fixed learning rate, progress can slow or get stuck, so the scheduler is a cleaner way to balance stability early and refinement later.
+                I also tested removing the exponential learning‑rate scheduler and training with a fixed learning rate. This is generally possible, but there is a stability–speed tradeoff:
+                a higher learning rate worked best for me (good but not perfect results), however it converged very quickly and then plateaued, with later epochs not improving much.
+                Lowering the fixed learning rate makes updates safer, but can slow training and risks getting stuck, which is why I prefer using a scheduler.
             </p>
             <div class="grid-1 mnist-narrow mnist-center" style="margin-top:8px;">
                 <figure>
@@ -1623,6 +1624,21 @@
                 <figure>
                     <img class="expandable" src="./part2/outputs_part2_6/class_unet_samples_epoch10.png" alt="Class-conditioned UNet samples epoch 10" />
                     <figcaption>Epoch 10 – sharp, class‑conditional digits (4 samples per class).</figcaption>
+                </figure>
+            </div>
+            <h3 class="subsection-title" style="margin-top:18px;">No scheduler (fixed learning rate) – samples</h3>
+            <div class="mnist-samples-row" style="margin-top:10px;">
+                <figure>
+                    <img class="expandable" src="./part2/outputs_part2_6/no-scheduler/class_unet_samples_epoch1-2.png" alt="No-scheduler class-conditioned UNet samples epoch 1" />
+                    <figcaption>Epoch 1 (no scheduler).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable" src="./part2/outputs_part2_6/no-scheduler/class_unet_samples_epoch5-2.png" alt="No-scheduler class-conditioned UNet samples epoch 5" />
+                    <figcaption>Epoch 5 (no scheduler).</figcaption>
+                </figure>
+                <figure>
+                    <img class="expandable" src="./part2/outputs_part2_6/no-scheduler/class_unet_samples_epoch10-3.png" alt="No-scheduler class-conditioned UNet samples epoch 10" />
+                    <figcaption>Epoch 10 (no scheduler).</figcaption>
                 </figure>
             </div>
         </section>
